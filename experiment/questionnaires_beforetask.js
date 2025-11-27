@@ -1,15 +1,22 @@
-// Loneliness - DJG-6 ================================================
-const items_djg = {
-    DJG_Emotional_1: "I experience a general sense of emptiness",
-    DJG_Emotional_2: "I miss having people around me",
-    DJG_Emotional_3: "I often feel rejected",
-    DJG_Social_4_R: "There are plenty of people I can rely on when I have problems",
-    DJG_Social_5_R: "There are many people I can trust completely",
-    DJG_Social_6_R: "There are enough people I feel close to"
+// De Jong - Loneliness ================================================
+
+const items_dejong = {
+    DeJong_SocialLoneliness_1: "There is always someone I can talk to about my day-to-day problems",
+    DeJong_EmotionalLoneliness_2: "I miss having a really close friend",
+    DeJong_EmotionalLoneliness_3: "I experience a general sense of emptiness",
+    DeJong_SocialLoneliness_4: "There are plenty of people I can lean on when I have problems",
+    DeJong_EmotionalLoneliness_5: "I miss the pleasure of the company of others",
+    DeJong_EmotionalLoneliness_6: "I find my circle of friends and acquaintances too limited",
+    DeJong_SocialLoneliness_7: "There are many people I can trust completely",
+    DeJong_SocialLoneliness_8: "There are enough people I feel close to",
+    DeJong_EmotionalLoneliness_9: "I miss having people around me",
+    DeJong_EmotionalLoneliness_10: "I often feel rejected",
+    DeJong_SocialLoneliness_11: "I can call on my friends whenever I need them",
 }
 
-function make_djg(items, required = true) {
+function make_dejong(items, required = true) {
     items = shuffleObject(items)
+
     questions = []
 
     // Make questions
@@ -19,19 +26,28 @@ function make_djg(items, required = true) {
             name: key,
             type: "rating",
             displayMode: "buttons",
+            // scaleColorMode: "colored",
             isRequired: required,
             rateValues: [
                 {
                     value: 0,
-                    text: "No",
+                    text: "None of the time",
+                },
+                {
+                    value: 0.5,
+                    text: "Rarely",
                 },
                 {
                     value: 1,
-                    text: "More or less",
+                    text: "Some of the time",
                 },
                 {
                     value: 2,
-                    text: "Yes",
+                    text: "Often",
+                },
+                {
+                    value: 3,
+                    text: "All of the time",
                 },
             ],
         }
@@ -41,7 +57,7 @@ function make_djg(items, required = true) {
     return { elements: questions }
 }
 
-const questionnaire_loneliness = {
+const questionnaire_dejong = {
     type: jsPsychSurvey,
     survey_json: function () {
         return {
@@ -50,11 +66,153 @@ const questionnaire_loneliness = {
                 "Please indicate for each of the statements, the extent to which they apply to your situation, the way you feel now.",
             showQuestionNumbers: false,
             goNextPageAutomatic: true,
-            pages: make_djg(items_djg),
+            pages: make_dejong(items_dejong),
         }
     },
     data: {
-        screen: "questionnaire_loneliness",
+        screen: "questionnaire_dejong",
+    },
+}
+
+
+// Loneliness - DJG-6 ================================================
+// const items_djg = {
+//     DJG_Emotional_1: "I experience a general sense of emptiness",
+//     DJG_Emotional_2: "I miss having people around me",
+//     DJG_Emotional_3: "I often feel rejected",
+//     DJG_Social_4_R: "There are plenty of people I can rely on when I have problems",
+//     DJG_Social_5_R: "There are many people I can trust completely",
+//     DJG_Social_6_R: "There are enough people I feel close to"
+// }
+
+// function make_djg(items, required = true) {
+//     items = shuffleObject(items)
+//     questions = []
+
+//     // Make questions
+//     for (const key of Object.keys(items)) {
+//         q = {
+//             title: items[key],
+//             name: key,
+//             type: "rating",
+//             displayMode: "buttons",
+//             isRequired: required,
+//             rateValues: [
+//                 {
+//                     value: 0,
+//                     text: "No",
+//                 },
+//                 {
+//                     value: 1,
+//                     text: "More or less",
+//                 },
+//                 {
+//                     value: 2,
+//                     text: "Yes",
+//                 },
+//             ],
+//         }
+//         questions.push(q)
+//     }
+
+//     return { elements: questions }
+// }
+
+// const questionnaire_loneliness = {
+//     type: jsPsychSurvey,
+//     survey_json: function () {
+//         return {
+//             title: "About how you feel",
+//             description:
+//                 "Please indicate for each of the statements, the extent to which they apply to your situation, the way you feel now.",
+//             showQuestionNumbers: false,
+//             goNextPageAutomatic: true,
+//             pages: make_djg(items_djg),
+//         }
+//     },
+//     data: {
+//         screen: "questionnaire_loneliness",
+//     },
+// }
+
+// UCLA - Loneliness ================================================
+
+const items_ucla = {
+    UCLA_1: "I am unhappy doing so many things alone",
+    UCLA_2: "I have nobody to talk to",
+    UCLA_3: "I cannot tolerate being so alone",
+    UCLA_4: "I lack companionship",
+    UCLA_5: "I feel as if nobody really understands me",
+    UCLA_6: "I find myself waiting for people to call or write",
+    UCLA_7: "There is no one I can turn to",
+    UCLA_8: "I am no longer close to anyone",
+    UCLA_9: "My interest and ideas are not shared by those around me",
+    UCLA_10: "I feel left out",
+    UCLA_11: "I feel completely alone",
+    UCLA_12: "I am unable to reach out and communicate with those around me",
+    UCLA_13: "My social relationships are superficial",
+    UCLA_14: "I feel starved for company",
+    UCLA_15: "No one really knows me well",
+    UCLA_16: "I feel isolated from others",
+    UCLA_17: "I am unhappy being so withdrawn",
+    UCLA_18: "It is difficult for me to make friends",
+    UCLA_19: "I feel shut out and excluded by others",
+    UCLA_20: "People are around me but not with me",
+}
+
+function make_ucla(items, required = true) {
+    items = shuffleObject(items)
+
+    questions = []
+
+    // Make questions
+    for (const key of Object.keys(items)) {
+        q = {
+            title: items[key],
+            name: key,
+            type: "rating",
+            displayMode: "buttons",
+            // scaleColorMode: "colored",
+            isRequired: required,
+            rateValues: [
+                {
+                    value: 0,
+                    text: "I never feel this way",
+                },
+                {
+                    value: 1,
+                    text: "I rarely feel this way",
+                },
+                {
+                    value: 2,
+                    text: "I sometimes feel this way",
+                },
+                {
+                    value: 3,
+                    text: "I often feel this way",
+                },
+            ],
+        }
+        questions.push(q)
+    }
+
+    return { elements: questions }
+}
+
+const questionnaire_ucla = {
+    type: jsPsychSurvey,
+    survey_json: function () {
+        return {
+            title: "About how you feel",
+            description:
+                "Please indicate how often each of the statements below is descriptive of you",
+            showQuestionNumbers: false,
+            goNextPageAutomatic: true,
+            pages: make_ucla(items_ucla),
+        }
+    },
+    data: {
+        screen: "questionnaire_ucla",
     },
 }
 

@@ -52,13 +52,14 @@
             questionnaire_somatichealth,
             questionnaire_mentalhealth,
             questionnaire_phq4,
+            questionnaire_dejong,
+            questionnaire_ucla,
         ])
         qs_aftertask = jsPsych.randomization.shuffleNoRepeats([
             questionnaire_mint,
             questionnaire_bait,
             questionnaire_iri,
             questionnaire_seacs,
-            questionnaire_dejong,
         ])
 
         // Start -----------------------------------------------------------------
@@ -70,6 +71,8 @@
         timeline.push(qs_beforetask[1])
         timeline.push(qs_beforetask[2])
         timeline.push(qs_beforetask[3])
+        timeline.push(qs_beforetask[4])
+        timeline.push(qs_beforetask[5])
 
         // Task
 
@@ -78,8 +81,7 @@
         timeline.push(qs_aftertask[0])
         timeline.push(qs_aftertask[1])
         timeline.push(qs_aftertask[2])      
-        timeline.push(qs_aftertask[3]) 
-        timeline.push(qs_aftertask[4])   
+        timeline.push(qs_aftertask[3])    
 
         // // End
         timeline.push(experiment_feedback)
