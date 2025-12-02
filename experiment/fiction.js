@@ -20,43 +20,20 @@ function generateRandomNumbers(min, max, N) {
 var social_trialnumber = 1
 
 // Basic button label
-var text_instructionsbutton = "Continue"
-
-
-// Instructions ======================================================================
-
-var task_instructions =
-    "<h2>Welcome</h2>" +
-    "<p>The following study is interested in looking at social interactions from a range of sources.</p>" +
-    "<p>You will observe several conversations over the next few slides. " +
-    "Imagine you are participating in the interaction while reading the dialogue.</p>" +
-    "<p>After each interaction, you will be prompted with a few questions asking about your experience.</p>" +
-    "<p><b>If at any point you are uncomfortable, you can withdraw from the study by closing the tab.</b></p>"
+var "Continue" = "Continue"
 
 var text_ticks_1to7_social = ["1", "2", "3", "4", "5", "6", "7"]
 
-// ======================================================================
-// VIGNETTE TEMPLATES (EDIT IMAGE FILENAMES ONLY)
-// ======================================================================
-//
-// Each template has:
-//  - id: internal label
-//  - Topic: "Romantic", "Mental", "Trivial"
-//  - OrderLabel: e.g. "Romantic 1"
-//  - context_text: scenario instructions
-//  - images_AI: array of filenames for AI-labelled versions
-//  - images_Human: array of filenames for Human-labelled versions
-//
-// Filenames are relative to "stimuli/" (we prepend that later).
-//
 
-var social_vignette_templates = [
+// VIGNETTE TEMPLATES ======================================================================
+
+var vignette_templates = [
     {
         id: "romantic1",
         Topic: "Romantic",
-        OrderLabel: "Romantic 1",
+        topic_label: "Romantic 1",
         context_text:
-            "You recently joined an online platform designed to help people seeking romantic relationships.",
+            "The following screenshots are taken from a conversation posted on reddit following a thread discussing people's experiences with romantic apps. Users have provided their consent for their images to be used during this study, provided any identifiable information is made anonymous.",
         images_AI: [
             "101.png",
         ],
@@ -67,9 +44,9 @@ var social_vignette_templates = [
     {
         id: "romantic2",
         Topic: "Romantic",
-        OrderLabel: "Romantic 2",
+        topic_label: "Romantic 2",
         context_text:
-            "You recently joined an online platform seeking advice for romantic relationships.",
+            "The following screenshots are taken from a conversation posted on reddit following a thread discussing people's experiences with romantic apps. Users have provided their consent for their images to be used during this study, provided any identifiable information is made anonymous.",
         images_AI: [
             "201.png",
         ],
@@ -80,9 +57,9 @@ var social_vignette_templates = [
     {
         id: "mental1",
         Topic: "Mental",
-        OrderLabel: "Mental health 1",
+        topic_label: "Mental health 1",
         context_text:
-            "You recently reached out to an online charity for support with your mental wellbeing.",
+            "The following screenshots are taken from a conversation posted on reddit following a thread discussing people's experiences with mental health support assistants. Users have provided their consent for their images to be used during this study, provided any identifiable information is made anonymous.",
         images_AI: [
             "301.png",
         ],
@@ -93,9 +70,9 @@ var social_vignette_templates = [
     {
         id: "mental2",
         Topic: "Mental",
-        OrderLabel: "Mental health 2",
-        context_text:
-            "You recently engaged in an online platform designed to help support those struggling with their mental wellbeing.",
+        topic_label: "Mental health 2",
+        context_text: 
+            "The following screenshots are taken from a conversation posted on reddit following a thread discussing people's experiences with mental health support assistants. Users have provided their consent for their images to be used during this study, provided any identifiable information is made anonymous.",       
         images_AI: [
             "401.png",
         ],
@@ -106,9 +83,9 @@ var social_vignette_templates = [
     {
         id: "trivial1",
         Topic: "Trivial",
-        OrderLabel: "Trivial 1",
+        topic_label: "Trivial 1",
         context_text:
-            "You recently joined a cooking class and are trying to figure out what you should have for dinner.",
+            "The following screenshots are taken from a conversation posted on reddit following a thread discussing people's experiences with travel planning assistants. Users have provided their consent for their images to be used during this study, provided any identifiable information is made anonymous.",
         images_AI: [
             "501.png",
         ],
@@ -119,9 +96,9 @@ var social_vignette_templates = [
     {
         id: "trivial2",
         Topic: "Trivial",
-        OrderLabel: "Trivial 2",
+        topic_label: "Trivial 2",
         context_text:
-            "You are planning a holiday using an online-accessible travel assistant.",
+            "The following screenshots are taken from a conversation posted on reddit following a thread designed to help connect people to make new friends. It is designed for people to talk about their day-to-day experiences. Users have provided their consent for their images to be used during this study, provided any identifiable information is anonymised.",
         images_AI: [
             "601.png",
         ],
@@ -131,84 +108,86 @@ var social_vignette_templates = [
     },
 ]
 
-// ======================================================================
-// CONDITION ASSIGNMENT (3 AI, 3 HUMAN) + RANDOM IMAGE PER CONDITION
-// ======================================================================
+/// Condition assignment ============================================
+function assignCondition(stimuli_list) {
+    let new_stimuli_list = []
+    // Loop through unique categories
+    for (let cat of [...new Set(stimuli_list.map((a) => a.Category))]) {
+        // Get all stimuli of this category
+        var cat_stimuli = stimuli_list.filter((a) => a.Category == cat)
 
-function assignSocialConditions(vignette_templates) {
-    // Random order of IDs
-    let ids = vignette_templates.map((v) => v.id)
-    ids = shuffleArray(ids)
+        // Shuffle cat_stimuli
+        cat_stimuli = shuffleArray(cat_stimuli)
 
-    // First 3 => AI, remaining 3 => Human
-    let ai_ids = ids.slice(0, 3)
+        // Assign conditions
+        let conditions = ["Human", "AI"]
+        let half = Math.floor(cat_stimuli.length / 2)
+        let remainder = cat_stimuli.length % 2
 
-    let new_list = []
-
-    for (let v of vignette_templates) {
-        let cond = ai_ids.includes(v.id) ? "AI" : "Human"
-        let image_array =
-            cond === "AI" ? v.images_AI.slice() : v.images_Human.slice()
-
-        let chosen_image
-        if (image_array.length > 0) {
-            chosen_image = shuffleArray(image_array)[0]
-        } else {
-            // failsafe placeholder
-            chosen_image = "PLACEHOLDER_" + v.id + "_" + cond + ".png"
+        let index = 0
+        // First assign evenly
+        for (let i = 0; i < 2; i++) {
+            for (let j = 0; j < half; j++) {
+                cat_stimuli[index].Condition = conditions[i]
+                index++
+            }
         }
 
-        new_list.push({
-            id: v.id,
-            Topic: v.Topic,
-            OrderLabel: v.OrderLabel,
-            Condition: cond,        // "AI" or "Human" (used internally only)
-            Stimulus: chosen_image, // image filename
-            context_text: v.context_text,
-        })
+        // If odd number, assign the leftover randomly
+        if (remainder > 0) {
+            let shuffledConditions = shuffleArray(conditions)
+            cat_stimuli[index].Condition = shuffledConditions[0]
+            index++
+        }
+
+        // Add to new_stimuli_list
+        new_stimuli_list.push(...cat_stimuli)
     }
-
-    // Shuffle trial order once for all passes
-    new_list = shuffleArray(new_list)
-    return new_list
+    return shuffleArray(new_stimuli_list)
 }
 
-var social_stimuli = assignSocialConditions(social_vignette_templates)
-
-// Attention checks: choose 2 out of the 6 conversations for topic-checks
-// Conversations are indexed 1..social_stimuli.length
-var social_attention_trials = generateRandomNumbers(1, social_stimuli.length, 2)
-
-// ======================================================================
-// PRELOAD
-// ======================================================================
-
-var social_preload = {
-    type: jsPsychPreload,
-    images: social_stimuli.map((a) => "stimuli/" + a.Stimulus),
-    message: "Please wait while the conversations are being loaded.",
+// Function used to insert catch-trials ("what was the topic?") in some trials
+function generateRandomNumbers(min, max, N) {
+    return [...Array(max - min + 1).keys()]
+        .map((i) => i + min)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, N)
+        .sort((a, b) => a - b) // Sort the numbers in ascending order
 }
 
-// ======================================================================
-// INSTRUCTIONS
-// ======================================================================
+// Variables ===================================================================
+var fiction_trialnumber = 1
+stimuli = assignCondition(stimuli_list)
 
-var social_instructions1 = {
+// We make 2 catch trials (always starting from 2 = the first trial) - attention checks
+catch_trials = [2].concat(generateRandomNumbers(1, stimuli_list.length, 2))
+
+
+// INSTRUCTIONS ======================================================================
+
+const task_instructions1 = {
     type: jsPsychSurvey,
-    data: { screen: "social_instructions1" },
+    data: { screen: "task_instructions1" },
     survey_json: {
         showQuestionNumbers: false,
-        completeText: text_instructionsbutton,
+        completeText: "Let's start",
         pages: [
             {
                 elements: [
                     {
                         type: "html",
-                        name: "InstructionsSocial",
-                        html:
-                            "<div style='max-width:800px; margin:auto; text-align:left;'>" +
-                            task_instructions +
-                            "</div>",
+                        name: "Instructions1",
+                        html: `
+<div style="display: flex; justify-content: space-between; align-items: flex-start;">
+    <h1 style="margin: 0;">Instructions</h1>
+</div>
+<h2>Welcome</h2>
+<p>The following study is interested in looking at social interactions from a range of sources.</p>
+<p>You will observe several conversations over the next few slides.</p>
+<p>Imagine you are participating in the interaction while reading the dialogue.</p>
+<p>After each interaction, you will be prompted with a few questions asking about your experience.</p>
+<p><b>If at any point you are uncomfortable, you can withdraw from the study by closing the tab.</b></p>
+`,
                     },
                 ],
             },
@@ -216,21 +195,62 @@ var social_instructions1 = {
     },
 }
 
+const task_instructions2 = {
+    type: jsPsychSurvey,
+    data: { screen: "task_instructions2" },
+    on_finish: function () {
+        fiction_trialnumber = 1 // Reset trial counter
+    },
+    survey_json: {
+        showQuestionNumbers: false,
+        completeText: "Start",
+        pages: [
+            {
+                elements: [
+                    {
+                        type: "html",
+                        name: "Instructions",
+                        html: `
+<h1>Real... or not?</h1>
+<h2>Instructions</h2>
+<div style="display: flex; gap: 20px; align-items: flex-start;">
+</div>
+<div style="flex: 2; text-align: left;">
+        <p><b>Thank you for staying with us so far!</b></p>
+        <p>There is <b>something important</b> we need to reveal... In the previous phase, ... INSERT BLUFF TEXT</p>
+        <p>In this final phase, we want you to try to identify <b>the correct category</b> of each image. We will briefly present all the conversations once more, followed by one question about whether you think the conversation is a real screenshot from our database or an AI-generated image.</p>
+        <p>Sometimes, it is hard to tell, but don't overthink it and <b>go with your gut feeling</b>. At the end, we will tell you if you were correct or wrong!</p>
+    </div>
+</div>
+`,
+                    },
+                ],
+            },
+        ],
+    },
+}
+
+var task_preloadstims = {
+    type: jsPsychPreload,
+    images: stimuli_list.map((a) => "stimuli/" + a.Item),
+    message: "Please wait while the experiment is being loaded (it can take a few minutes)",
+}
+
 // ======================================================================
 // FIRST PASS: SCENARIO INTRO + IMAGE + RATINGS (+ OPTIONAL ATTENTION CHECK)
 // ======================================================================
 
 // Intro before each conversation image
-var social_vignette_intro = {
+var vignette_intro = {
     type: jsPsychSurvey,
     survey_json: function () {
 
         var context_text = jsPsych.evaluateTimelineVariable("context_text")
-        var order_label = jsPsych.evaluateTimelineVariable("OrderLabel")
+        var topic_label = jsPsych.evaluateTimelineVariable("topic_label")
 
         return {
             showQuestionNumbers: false,
-            completeText: text_instructionsbutton,
+            completeText: "Continue",
             pages: [
                 {
                     elements: [
@@ -239,7 +259,7 @@ var social_vignette_intro = {
                             name: "VignetteIntro",
                             html:
                                 "<div style='max-width:800px; margin:auto; text-align:left;'>" +
-                                "<h3>" + order_label + "</h3>" +
+                                "<h3>" + topic_label + "</h3>" +
                                 "<p>This is a conversation. Please imagine that you are taking part in this interaction.</p>" +
                                 "<p>" + context_text + "</p>" +
                                 "</div>",
@@ -251,7 +271,7 @@ var social_vignette_intro = {
     },
     data: function () {
         return {
-            screen: "social_vignette_intro",
+            screen: "vignette_intro",
             vignette_id: jsPsych.evaluateTimelineVariable("id"),
             condition: jsPsych.evaluateTimelineVariable("Condition"), // internal AI/Human
             topic: jsPsych.evaluateTimelineVariable("Topic"),
@@ -576,7 +596,7 @@ var t_social_ratings_nocheck = {
 var social_phase1 = {
     timeline_variables: social_stimuli,
     timeline: [
-        social_vignette_intro,
+        vignette_intro,
         social_showimage1,
         t_social_ratings_withcheck,
         t_social_ratings_nocheck,
@@ -593,7 +613,7 @@ var social_bluff_intro = {
     data: { screen: "social_bluff_intro" },
     survey_json: {
         showQuestionNumbers: false,
-        completeText: text_instructionsbutton,
+        completeText: "Continue",
         pages: [
             {
                 elements: [
@@ -621,10 +641,10 @@ var social_belief_image = {
     },
     choices: [" "],
     prompt: function () {
-        var order_label = jsPsych.evaluateTimelineVariable("OrderLabel")
+        var topic_label = jsPsych.evaluateTimelineVariable("topic_label")
         return (
             "<h3>" +
-            order_label +
+            topic_label +
             "</h3><p>Based on this conversation, please rate how confident you are that the interaction partner was a human or an artificial agent.</p>"
         )
     },
@@ -701,12 +721,12 @@ var social_phase2 = {
 // ADMIT BLUFF + LONELINESS / FUTURE USE (3 DOMAINS)
 // ======================================================================
 
-var social_admit_bluff = {
+var task_bluff = {
     type: jsPsychSurvey,
-    data: { screen: "social_admit_bluff" },
+    data: { screen: "task_bluff" },
     survey_json: {
         showQuestionNumbers: false,
-        completeText: text_instructionsbutton,
+        completeText: "Continue",
         pages: [
             {
                 elements: [
@@ -846,7 +866,7 @@ var social_likelihood_romantic = social_domain_likelihood(
 // social_timeline.push(social_phase1)
 // social_timeline.push(social_bluff_intro)
 // social_timeline.push(social_phase2)
-// social_timeline.push(social_admit_bluff)
+// social_timeline.push(task_bluff)
 // social_timeline.push(social_likelihood_trivial)
 // social_timeline.push(social_likelihood_mental)
 // social_timeline.push(social_likelihood_romantic)
