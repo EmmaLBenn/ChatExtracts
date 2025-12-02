@@ -19,9 +19,6 @@ function generateRandomNumbers(min, max, N) {
 // Trial counter for this task
 var social_trialnumber = 1
 
-// Basic button label
-var "Continue" = "Continue"
-
 var text_ticks_1to7_social = ["1", "2", "3", "4", "5", "6", "7"]
 
 
@@ -31,7 +28,6 @@ var vignette_templates = [
     {
         id: "romantic1",
         Topic: "Romantic",
-        topic_label: "Romantic 1",
         context_text:
             "The following screenshots are taken from a conversation posted on reddit following a thread discussing people's experiences with romantic apps. Users have provided their consent for their images to be used during this study, provided any identifiable information is made anonymous.",
         images_AI: [
@@ -44,7 +40,6 @@ var vignette_templates = [
     {
         id: "romantic2",
         Topic: "Romantic",
-        topic_label: "Romantic 2",
         context_text:
             "The following screenshots are taken from a conversation posted on reddit following a thread discussing people's experiences with romantic apps. Users have provided their consent for their images to be used during this study, provided any identifiable information is made anonymous.",
         images_AI: [
@@ -57,7 +52,6 @@ var vignette_templates = [
     {
         id: "mental1",
         Topic: "Mental",
-        topic_label: "Mental health 1",
         context_text:
             "The following screenshots are taken from a conversation posted on reddit following a thread discussing people's experiences with mental health support assistants. Users have provided their consent for their images to be used during this study, provided any identifiable information is made anonymous.",
         images_AI: [
@@ -70,7 +64,6 @@ var vignette_templates = [
     {
         id: "mental2",
         Topic: "Mental",
-        topic_label: "Mental health 2",
         context_text: 
             "The following screenshots are taken from a conversation posted on reddit following a thread discussing people's experiences with mental health support assistants. Users have provided their consent for their images to be used during this study, provided any identifiable information is made anonymous.",       
         images_AI: [
@@ -83,7 +76,6 @@ var vignette_templates = [
     {
         id: "trivial1",
         Topic: "Trivial",
-        topic_label: "Trivial 1",
         context_text:
             "The following screenshots are taken from a conversation posted on reddit following a thread discussing people's experiences with travel planning assistants. Users have provided their consent for their images to be used during this study, provided any identifiable information is made anonymous.",
         images_AI: [
@@ -96,7 +88,6 @@ var vignette_templates = [
     {
         id: "trivial2",
         Topic: "Trivial",
-        topic_label: "Trivial 2",
         context_text:
             "The following screenshots are taken from a conversation posted on reddit following a thread designed to help connect people to make new friends. It is designed for people to talk about their day-to-day experiences. Users have provided their consent for their images to be used during this study, provided any identifiable information is anonymised.",
         images_AI: [
@@ -246,8 +237,6 @@ var vignette_intro = {
     survey_json: function () {
 
         var context_text = jsPsych.evaluateTimelineVariable("context_text")
-        var topic_label = jsPsych.evaluateTimelineVariable("topic_label")
-
         return {
             showQuestionNumbers: false,
             completeText: "Continue",
@@ -259,9 +248,8 @@ var vignette_intro = {
                             name: "VignetteIntro",
                             html:
                                 "<div style='max-width:800px; margin:auto; text-align:left;'>" +
-                                "<h3>" + topic_label + "</h3>" +
-                                "<p>This is a conversation. Please imagine that you are taking part in this interaction.</p>" +
                                 "<p>" + context_text + "</p>" +
+                                "<p>This is a conversation. Please imagine that you are taking part in this interaction.</p>" +
                                 "</div>",
                         },
                     ],
