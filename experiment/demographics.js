@@ -334,3 +334,65 @@ var demographics_endscreen = {
         screen: "demographics_endscreen",
     },
 }
+
+const demographics_debriefing = {
+    type: jsPsychSurvey,
+    survey_json: {
+        showQuestionNumbers: false,
+        completeText: "Continue",
+        pages: [
+            {
+                elements: [
+                    {
+                        type: "html",
+                        name: "Debrief",
+                        html: `
+<img src='https://blogs.brighton.ac.uk/sussexwrites/files/2019/06/University-of-Sussex-logo-transparent.png' width='150px' align='right'/><br><br><br><br><br>
+<h3>Debriefing</h3>
+<p align='left'>
+The purpose and aim of this study will be explained to you <b>next week</b>. A message will be posted on Canvas, and a debrief will be provided once data collection is complete.<p align='left'>
+<b>Thank you again!</b> Your participation in this study will be kept completely confidential. If you have any questions or concerns about the project, please contact <i style='color:DodgerBlue;'>D.Makowski@sussex.ac.uk</i> and/or <i style='color:DodgerBlue;'>R.Baykova@sussex.ac.uk</i>.</p>
+<p><b style='color:red;'>If you wish to withdraw your data, please close this tab now.</b>
+<b>Once you click 'Continue' and your data is saved, it will not be possible to withdraw your data.</b>
+
+
+<p>To complete your participation in this study, click on 'Continue' and <b style="color: green">wait until your responses have been successfully saved</b> before closing the tab.</p> 
+                            `,
+                    },
+                ],
+            },
+        ],
+    },
+    data: {
+        screen: "demographics_debrief",
+    },
+}
+
+const demographics_endscreen = {
+    type: jsPsychSurvey,
+    survey_json: function () {
+        text =
+            "<h2 style='color:green;'>Data saved successfully!</h2>" +
+            "<p>Thank you for participating, it means a lot to us.</p>"
+
+        // Return survey
+        return {
+            showQuestionNumbers: false,
+            completeText: "End",
+            pages: [
+                {
+                    elements: [
+                        {
+                            type: "html",
+                            name: "Endscreen",
+                            html: text,
+                        },
+                    ],
+                },
+            ],
+        }
+    },
+    data: {
+        screen: "demographics_endscreen",
+    },
+}
