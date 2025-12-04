@@ -18,7 +18,7 @@ const ConsentForm = {
             "Thank you for considering to take part in this study conducted by ... (see contact information below).</p>" +
             // Description
             "<p align='left'><b>Why have I been invited and what will I do?</b><br>" +
-            "This study aims to investigate perceptions of social interactions and how these may differ between conversation topic themes. The whole experiment will take you ~... min to complete. Please make sure that you are attentive and in a quiet environment, and that you are able to complete it all in one go, as your data will be deleted if you close the tab." +
+            "This study aims to investigate perceptions of social interactions and how these may differ between conversation topic themes.to complete." +
             "The whole experiment will take you <b style='color:#FF5722;'>~... min</b> to complete. Please make you sure that you are <b>attentive and in a quiet environment</b>, and that you have time to complete it in one go.</p>" +
             // Results and personal information
             "<p align='left'><b>What will happen to the results and my personal information?</b><br>" +
@@ -105,13 +105,16 @@ var demographic_questions = {
                         name: "Age",
                         isRequired: true,
                         inputType: "number",
-                        min: 0,
+                        min: 18,
                         max: 100,
                         placeholder: "e.g., 21",
+                        },
+                     ], 
                     },
-                ],
-            },
-            {
+                 {
+        
+       
+
                 elements: [
                     {
                         title: "What is your highest completed education level?",
