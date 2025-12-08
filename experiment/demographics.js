@@ -278,12 +278,22 @@ var demographics_debriefing = {
                         html:
                             "<img src='https://blogs.brighton.ac.uk/sussexwrites/files/2019/06/University-of-Sussex-logo-transparent.png' width='150px' align='right'/><br><br><br><br><br>" +
                             "<h2>Debriefing</h2>" +
-                            "<p align='left'> The purpose of this study was to The purpose of this study was to examine how the framing of an interaction partner as an AI versus human influences people’s trust, empathy, and perceived social presence during online personal conversations. In this experiment, some conversations were framed as being human-AI interaction, and others as being between human-human. However, all conversations were fictional and created specifically for this study." +
+                            "<p align='left'> The purpose of this study was to examine how the framing of an interaction partner as an AI versus human influences people's trust, empathy, and perceived social presence during online personal conversations. In this experiment, some conversations were framed as being human-AI interaction, and others as being between human-human. However, all conversations were fictional and created specifically for this study." +
                             "We were also interested in how individual differences - such as loneliness, mental wellbeing, interoceptive awareness, AI familiarity and social motivation - relate to these reactions. Understanding these factors gives insight into why and how people may respond differently to online social partners, informing future research surrounding AI use." +
                             "<p align='left'><b>Thank you again!</b> Your participation in this study will be kept completely confidential. If you have any questions or concerns about the project, please contact D.Makowski@sussex.ac.uk. and/or ... </p>" +
-                            "<p>To complete your participation in this study, click on 'Continue' and <b>wait until your responses have been successfully saved</b> before closing the tab.</p> ",
+                            "<p> To complete your participation in this study, click on 'Continue' and <b>wait until your responses have been successfully saved</b> before closing the tab.</p> " +
+                            "<p> We appreciate that some of the content in this study can be heavy and distressing. If you or someone you know is struggling with their mental health, please do not hesitate to reach out to the following charities for further support.</p>"+
+                            "<p> If you or someone you know is in immediate danger or thinking about ending their life, please call 999 or go to your nearest A&E.</p>"+
+                            "<p> <b> 24/7 Crisis lines:</b> </p>"+
+                            "<p> Call The Samaritans on 116 123</p>"+
+                            "<p> Text 'SHOUT' to 85258</p>"+
+                            "<p> <b>Support via charities:</b></p>"+
+                            "<p> Call the Mind welfare line, open Monday - Friday (9 am to 5 pm): 0300 123 3393 or visit their website for tools and strategies</p>"+
+                            "<p> https://www.mind.org.uk/need-urgent-help/using-this-tool/ </p>"+
+                            "<p> Mental Health Foundation 'https://www.mentalhealth.org.uk/' </p>" +
+                            "<p> <b>Local support:</b> Use the government website to find support services near you 'https://www.nhs.uk/nhs-services/mental-health-services/' </p>",
                     },
-                ],
+                ]
             },
         ],
     },
