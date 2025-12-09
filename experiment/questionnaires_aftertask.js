@@ -162,7 +162,7 @@ const questionnaire_mint = {
             description:
                 "Please answer the following questions based on how accurately each statement describes you in general.",
             showQuestionNumbers: false,
-            goNextPageAutomatic: true,
+            goNextPageAutomatic: false,
             pages: make_mint(items_mint),
         }
     },
@@ -187,7 +187,7 @@ const items_bait = {
     BAIT_NegativeAttitutes_10: "I am worried about future uses of AI",
     BAIT_PositiveAttitutes_11: "AI is exciting",
     BAIT_PositiveAttitutes_12: "Much of society will benefit from a future full of AI",
-    // add attention check from FakeArt
+    BAIT_AttentionCheck: "I can show that I am Human and not an AI by answering all the way to the right",
 }
 
 function make_bait(items, required = true, ticks = ["Disagree", "Agree"]) {
@@ -222,7 +222,7 @@ const questionnaire_bait = {
             description:
                 "We are interested in your thoughts about Artificial Intelligence (AI). Please read the statements below carefully and indicate the extent to which you agree with each statement.",
             showQuestionNumbers: false,
-            goNextPageAutomatic: true,
+            goNextPageAutomatic: false,
             pages: make_bait(items_bait),
         }
     },
@@ -238,7 +238,7 @@ const items_iri = {
     IRI_Cogntive_1: "I try to look at everybody's side of a disagreement before I make a decision.",
     IRI_Cogntive_2: "I sometimes try to understand my friends better by imagining how things look from their perspective.",
     IRI_Cogntive_3: "I believe that there are two sides to every question and try to look at them both.",
-    IRI_Cognitive_4: "I sometimes find it difficult to see things from the 'other guy's' point of view.",
+    IRI_Cognitive_4: "I sometimes find it difficult to see things from the 'other person's' point of view.",
     IRI_Cognitive_5: "I try to look at things from the other person's point of view before making up my mind.",
     IRI_Cognitive_6: "When I'm upset at someone, I usually try to 'put myself in their shoes' for a while.",
     IRI_Cognitive_7: "Before criticising somebody, I try to imagine how I would feel if I were in their place.",
@@ -283,7 +283,7 @@ const questionnaire_iri = {
             description:
                 "We are interested in your thoughts and feelings. Please read the statements below carefully and indicate the extent each statement describe you.",
             showQuestionNumbers: false,
-            goNextPageAutomatic: true,
+            goNextPageAutomatic: false,
             pages: make_iri(items_iri),
         }
     },
@@ -342,7 +342,7 @@ const questionnaire_seacs = {
             description:
                 "We are interested in your interactions with your social circle. Please read the statements below carefully and indicate the extent to which you agree with each statement.",
             showQuestionNumbers: false,
-            goNextPageAutomatic: true,
+            goNextPageAutomatic: false,
             pages: make_seacs(items_seacs),
         }
     },

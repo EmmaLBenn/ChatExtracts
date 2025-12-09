@@ -65,7 +65,7 @@ const questionnaire_dejong = {
             description:
                 "Please indicate for each of the statements, the extent to which they apply to your situation, the way you feel now.",
             showQuestionNumbers: false,
-            goNextPageAutomatic: true,
+            goNextPageAutomatic: false,
             pages: make_dejong(items_dejong),
         }
     },
@@ -73,67 +73,6 @@ const questionnaire_dejong = {
         screen: "questionnaire_dejong",
     },
 }
-
-
-// Loneliness - DJG-6 ================================================
-// const items_djg = {
-//     DJG_Emotional_1: "I experience a general sense of emptiness",
-//     DJG_Emotional_2: "I miss having people around me",
-//     DJG_Emotional_3: "I often feel rejected",
-//     DJG_Social_4_R: "There are plenty of people I can rely on when I have problems",
-//     DJG_Social_5_R: "There are many people I can trust completely",
-//     DJG_Social_6_R: "There are enough people I feel close to"
-// }
-
-// function make_djg(items, required = true) {
-//     items = shuffleObject(items)
-//     questions = []
-
-//     // Make questions
-//     for (const key of Object.keys(items)) {
-//         q = {
-//             title: items[key],
-//             name: key,
-//             type: "rating",
-//             displayMode: "buttons",
-//             isRequired: required,
-//             rateValues: [
-//                 {
-//                     value: 0,
-//                     text: "No",
-//                 },
-//                 {
-//                     value: 1,
-//                     text: "More or less",
-//                 },
-//                 {
-//                     value: 2,
-//                     text: "Yes",
-//                 },
-//             ],
-//         }
-//         questions.push(q)
-//     }
-
-//     return { elements: questions }
-// }
-
-// const questionnaire_loneliness = {
-//     type: jsPsychSurvey,
-//     survey_json: function () {
-//         return {
-//             title: "About how you feel",
-//             description:
-//                 "Please indicate for each of the statements, the extent to which they apply to your situation, the way you feel now.",
-//             showQuestionNumbers: false,
-//             goNextPageAutomatic: true,
-//             pages: make_djg(items_djg),
-//         }
-//     },
-//     data: {
-//         screen: "questionnaire_loneliness",
-//     },
-// }
 
 // UCLA - Loneliness ================================================
 
@@ -207,7 +146,7 @@ const questionnaire_ucla = {
             description:
                 "Please indicate how often each of the statements below is descriptive of you",
             showQuestionNumbers: false,
-            goNextPageAutomatic: true,
+            goNextPageAutomatic: false,
             pages: make_ucla(items_ucla),
         }
     },
@@ -224,7 +163,7 @@ const questionnaire_mentalhealth = {
         completeText: "Continue",
         pageNextText: "Next",
         pagePrevText: "Previous",
-        goNextPageAutomatic: true,
+        goNextPageAutomatic: false,
         showQuestionNumbers: false,
         // showProgressBar: "aboveHeader",
         pages: [
@@ -309,7 +248,7 @@ const questionnaire_somatichealth = {
         completeText: "Continue",
         pageNextText: "Next",
         pagePrevText: "Previous",
-        goNextPageAutomatic: true,
+        goNextPageAutomatic: false,
         showQuestionNumbers: false,
         // showProgressBar: "aboveHeader",
         pages: [
@@ -510,7 +449,7 @@ const questionnaire_phq4 = {
         return {
             title: "About your mood",
             showQuestionNumbers: false,
-            goNextPageAutomatic: true,
+            goNextPageAutomatic: false,
             pages: [
                 {
                     elements: [

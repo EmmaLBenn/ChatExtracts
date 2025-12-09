@@ -495,10 +495,10 @@ const phase2_instructions = {
                             </div>
                             <div style="flex: 2; text-align: left;">
                             <p><b>Thank you for staying with us so far!</b></p>
-                            <p>There is <b>something important</b> we need to reveal... In the previous phase, you were shown conversations with partners who were presented as AI chatbots or real people.</p>
-                            <p>We randomly changed the appearance of these conversations (e.g. from ChatGPT or iMessage), therefore some conversations may have been inaccurately presented.</p>
-                            <p>For example: an interaction from ChatGPT with an artificial chatbot may have actually been an interaction between two humans.</p>
-                            <p>In this final phase, we want you to try to identify <b>the correct category</b> of each image. We will briefly present all the conversations once more, followed by one question about whether you think the interaction partner was a human or an artificial chatbot.</p>
+                            <p>There is <b>something important</b> we need to reveal... In the previous phase, you were shown conversations with interaction partners who were presented as AI chatbots or real people.</p>
+                            <p>We randomly assigned the appearance of these conversations to look like AI-human interactions or human-human interactions. Therefore, some conversations may not have been presented in their correct form.</p>
+                            <p>For example: an interaction presented to you in the form of a conversation with an artificial agent (e.g. ChatGPT) may have actually been an interaction between two humans.</p>
+                            <p>In this final phase, we want you to try to identify <b>the correct category</b> of each image. We will briefly present all the conversations once more, followed by one question about whether you think the interaction partner was a human or an artificial agent.</p>
                             <p>Sometimes, it is hard to tell, but don't overthink it and <b>go with your gut feeling</b>. At the end, we will tell you if you were correct or wrong!</p>
                             </div>
                             `,
@@ -518,7 +518,7 @@ var phase2_vignette = {
      stimulus_width: 550,
     choices: ['Continue'],
     prompt:
-        "<p>Based on this conversation, please rate how confident you are that the interaction partner was a human or an artificial chatbot.</p>",
+        "<p>Based on this conversation, please rate how confident you are that the interaction partner was a human or an AI chatbot.</p>",
     trial_duration: null,
     data: function () {
         return {
@@ -597,15 +597,14 @@ const loneliness_general = {
     type: jsPsychSurvey,
     survey_json: function () {
         return {
-            title: "Think back on a time when you felt the most alone generally.",
-            description: "In this situation, how likely would you be to carry out a conversation similar to the 'cooking class' and 'travel assistant' examples with...",
+            title: "Think back to a time when you felt the most alone generally.",
             showQuestionNumbers: false,
             goNextPageAutomatic: false,
             pages: [
                 {
                     elements: [
                         {
-                            title: "... with a close friend",
+                            title: "In this situation, how likely would you be to carry out a conversation similar to the 'cooking class' and 'travel assistant' examples with a close friend?",
                             name: "TrivialFriend",
                             type: "rating",
                             displayMode: "buttons",
@@ -617,7 +616,7 @@ const loneliness_general = {
                             isRequired: true,
                         },
                         {
-                            title: "... with an artificial chatbot",
+                            title: "In this situation, how likely would you be to carry out a conversation similar to the 'cooking class' and 'travel assistant' examples with an AI chatbot (e.g. ChatGPT, Gemini, Siri)?",
                             name: "TrivialAI",
                             type: "rating",
                             displayMode: "buttons",
@@ -642,15 +641,14 @@ const loneliness_mental = {
     type: jsPsychSurvey,
     survey_json: function () {
         return {
-            title: "Think back on a time when you felt the most alone when struggling mentally.",
-            description: "In this situation, how likely would you be to carry out a conversation similar to the mental health examples with...",
+            title: "Think back to a time when you felt the most alone when struggling mentally.",
             showQuestionNumbers: false,
             goNextPageAutomatic: false,
             pages: [
                 {
                     elements: [
                         {
-                            title: "... with a close friend",
+                            title: "In this situation, how likely would you be to carry out a conversation similar to the mental health examples with a close friend?",
                             name: "MentalFriend",
                             type: "rating",
                             displayMode: "buttons",
@@ -662,7 +660,7 @@ const loneliness_mental = {
                             isRequired: true,
                         },
                         {
-                            title: "... with an artificial chatbot",
+                            title: "In this situation, how likely would you be to carry out a conversation similar to the mental health examples with an AI chatbot (e.g. ChatGPT, Gemini, Siri)?",
                             name: "MentalAI",
                             type: "rating",
                             displayMode: "buttons",
@@ -687,15 +685,14 @@ const loneliness_romantic = {
     type: jsPsychSurvey,
     survey_json: function () {
         return {
-            title: "Think back on a time when you felt the most alone when romantically unsatisfied.",
-            description: "In this situation, how likely would you be to carry out a conversation similar to the romantic examples with...",
+            title: "Think back to a time when you felt the most alone when romantically unsatisfied.",
             showQuestionNumbers: false,
             goNextPageAutomatic: false,
             pages: [
                 {
                     elements: [
                         {
-                            title: "... with a close friend",
+                            title: "In this situation, how likely would you be to carry out a conversation similar to the romantic examples with a close friend?",
                             name: "RomanticFriend",
                             type: "rating",
                             displayMode: "buttons",
@@ -707,7 +704,7 @@ const loneliness_romantic = {
                             isRequired: true,
                         },
                         {
-                            title: "... with an artificial chatbot",
+                            title: "In this situation, how likely would you be to carry out a conversation similar to the romantic examples with an AI chatbot (e.g. ChatGPT, Gemini, Siri)?",
                             name: "RomanticAI",
                             type: "rating",
                             displayMode: "buttons",
@@ -732,20 +729,20 @@ const loneliness_people = {
     type: jsPsychSurvey,
     survey_json: function () {
         return {
-            title: "When i feel lonely, I turn to...",
+            title: "Support outlets",
             showQuestionNumbers: false,
             goNextPageAutomatic: false,
             pages: [
                 {
                     elements: [
                         {
-                            title: "Select all that apply",
+                            title: "When I feel lonely, I turn to... (select all that apply)",
                             name: "LonelinessPeople",
                             type: "checkbox",
                             choices: [
                                 "Friends",
                                 "Family",
-                                "AI",
+                                "AI (e.g. Siri, ChatGPT, Gemini, Alexa, Google Home, Replika, AI companion, etc.)",
                                 "Favourite TV show/movie/YouTuber",
                                 "Charities (e.g. Samaritans)",
                             ],
@@ -757,8 +754,61 @@ const loneliness_people = {
                             colCount: 1,
                         },
                         {
-                            title: "I feel lonely when I engage with these people.",
-                            name: "LonelinessEngage",
+                            visibleIf: "{LonelinessPeople} contains 'Friends'",
+                            title: "I feel lonely when I engage with my friends.",
+                            name: "LonelinessFriends",
+                            type: "rating",
+                            displayMode: "buttons",
+                            rateCount: 7,
+                            rateMin: 1,
+                            rateMax: 7,
+                            minRateDescription: "Completely disagree",
+                            maxRateDescription: "Completely agree",
+                            isRequired: true,
+                        },
+                        {
+                            visibleIf: "{LonelinessPeople} contains 'Family'",
+                            title: "I feel lonely when I engage with my family.",
+                            name: "LonelinessFamily",
+                            type: "rating",
+                            displayMode: "buttons",
+                            rateCount: 7,
+                            rateMin: 1,
+                            rateMax: 7,
+                            minRateDescription: "Completely disagree",
+                            maxRateDescription: "Completely agree",
+                            isRequired: true,
+                        },
+                        {
+                            visibleIf: "{LonelinessPeople} contains 'AI (e.g. Siri, ChatGPT, Gemini, Alexa, Google Home, Replika, AI companion, etc.)'",
+                            title: "I feel lonely when I engage with AI.",
+                            name: "LonelinessAI",
+                            type: "rating",
+                            displayMode: "buttons",
+                            rateCount: 7,
+                            rateMin: 1,
+                            rateMax: 7,
+                            minRateDescription: "Completely disagree",
+                            maxRateDescription: "Completely agree",
+                            isRequired: true,
+                        },
+                        {
+                            visibleIf: "{LonelinessPeople} contains 'Favourite TV show/movie/YouTuber'",
+                            title: "I feel lonely when I engage with my favourite TV show/movie/YouTuber.",
+                            name: "LonelinessMedia",
+                            type: "rating",
+                            displayMode: "buttons",
+                            rateCount: 7,
+                            rateMin: 1,
+                            rateMax: 7,
+                            minRateDescription: "Completely disagree",
+                            maxRateDescription: "Completely agree",
+                            isRequired: true,
+                        },
+                        {
+                            visibleIf: "{LonelinessPeople} contains 'Charities (e.g. Samaritans)'",
+                            title: "I feel lonely when I engage with charities (e.g. Samaritans).",
+                            name: "LonelinessCharities",
                             type: "rating",
                             displayMode: "buttons",
                             rateCount: 7,
