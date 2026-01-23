@@ -58,6 +58,7 @@
         const participantID = jsPsych.randomization.randomID(10)
 
         // full screen
+        timeline.push()
         timeline.push(ConsentForm)
 
         // Shuffle -----------------------------------------------------------------
@@ -83,7 +84,7 @@
             questionnaire_rqs,
         ])
 
-        // Start -----------------------------------------------------------------
+        // Start -----------------------------------------------------------------   
         timeline.push(demographics_browser_info)
         timeline.push(demographic_questions)
 
