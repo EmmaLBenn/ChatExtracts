@@ -162,7 +162,6 @@ var task_preloadstims = {
 // ======================================================================
 // PHASE 1
 // ======================================================================
-
 const phase1_instructions = {
     type: jsPsychSurvey,
     data: { screen: "phase1_instructions" },
@@ -234,6 +233,7 @@ attention_indices.forEach((i) => {
 // Show vignette
 var phase1_vignette = {
     type: jsPsychHtmlButtonResponse,
+    
     stimulus: function () {
         let context_text = jsPsych.evaluateTimelineVariable("context_text")
         let intro_text = jsPsych.evaluateTimelineVariable("intro_text")
@@ -264,27 +264,33 @@ var phase1_vignette = {
                     you can withdraw from the study by closing the tab.
                 </p>
 
-                <!-- INTRO IMAGE -->
                 <div style="margin-top: 20px; text-align: center;">
                     <img src="stimuli/${intro_img}" 
                          style="width:900px; max-width:100%; height:auto; margin-bottom: 20px;">
                 </div>
 
-                <!-- MAIN CONVERSATION IMAGE -->
                 <div style="text-align: center;">
                     <img src="stimuli/${img_file}" 
                          style="width:550px; max-width:100%; height:auto;">
                 </div>
 
+                <div style="height: 30px;"></div>
+
+                <div style="text-align: center;">
+                    <p>You have reached the end of the conversation.</p>
+                    <p>You will now be asked a sequence of questions regarding your interaction.</p>
+                    <p>Remember to imagine this is you engaging in the conversation.</p>
+                </div>
+
             </div>
         `
     },
-    choices: ['Continue'],
-    prompt:
-        "<p>You have reached the end of the conversation.</p>" +
-        "<p>You will now be asked a sequence of questions regarding your interaction.</p>" +
-        "<p>Remember to imagine this is you engaging in the conversation.</p>",
+    choices: [
+        '<button style="background-color:#FFFFFF; color:#474747; padding:12px 24px; border:2px solid #D9D9D9; border-radius:8px; font-size:18px; cursor:pointer; margin-top: 50px; position:relative; bottom: 100px;">Continue</button>'
+    ],
+
     trial_duration: null,
+    
     data: function () {
         return {
             screen: "vignette_image1",
@@ -295,6 +301,7 @@ var phase1_vignette = {
             trial_number: vignettes_trialnumber,
         }
     },
+    
     on_finish: function () {
         vignettes_trialnumber += 1
     },
@@ -519,15 +526,31 @@ const phase2_instructions = {
 
 // Show image again, then confidence slider (AI vs Human)
 var phase2_vignette = {
-    type: jsPsychImageButtonResponse,
+    // Switch to HTML plugin to allow custom Image -> Text -> Button layout
+    type: jsPsychHtmlButtonResponse,
+    
     stimulus: function () {
-        return "stimuli/" + jsPsych.evaluateTimelineVariable("Stimulus")
+        // manually construct the image tag here
+        var img_src = "stimuli/" + jsPsych.evaluateTimelineVariable("Stimulus");
+        
+        return `
+            <div style="max-width: 900px; margin: 0 auto; text-align: center;">
+                
+                <img src="${img_src}" style="width:550px; max-width:100%; height:auto;">
+
+                <div style="height: 20px;"></div>
+
+                <p>
+                    Based on this conversation, please rate how confident you are that the interaction partner was a human or an AI chatbot.
+                </p>
+
+            </div>
+        `;
     },
-     stimulus_width: 550,
-    choices: ['Continue'],
-    prompt:
-        "<p>Based on this conversation, please rate how confident you are that the interaction partner was a human or an AI chatbot.</p>",
-    trial_duration: null,
+    choices: [
+     '<button style="background-color:#FFFFFF; color:#474747; padding:12px 24px; border:2px solid #D9D9D9; border-radius:8px; font-size:18px; cursor:pointer; margin-top: 50px; position:relative; bottom: 100px;">Continue</button>'
+    ],
+    
     data: function () {
         return {
             screen: "phase2_vignette",
@@ -580,6 +603,13 @@ var phase2_scale = {
                                 { value: -100, text: "AI" },
                                 { value: 100, text: "Human" },
                             ],
+                            validators: [
+                                {
+                                type: "expression",
+                                expression: "{Belief_AI_Human} != 0",
+                                text: "Please indicate a preference (choose a value other than 0)."
+                                }
+                            ]
                         },
                     ],
                 },

@@ -63,7 +63,7 @@ const questionnaire_dejong = {
         return {
             title: "About how you feel",
             description:
-                "Please indicate for each of the statements, the extent to which they apply to your situation, the way you feel now.",
+                "Consider how you feel now. For each of the statements, please indicate the extent to which they apply to your situation.",
             showQuestionNumbers: false,
             goNextPageAutomatic: false,
             pages: make_dejong(items_dejong),
@@ -170,7 +170,7 @@ const questionnaire_mentalhealth = {
             {
                 elements: [
                     {
-                        title: "Are you currently living with one of the following medically diagnosed difficulty?",
+                        title: "Are you currently living with any of the following medically diagnosed difficulties?",
                         name: "Disorders_Psychiatric",
                         type: "checkbox",
                         choices: [
@@ -256,7 +256,7 @@ const questionnaire_somatichealth = {
                 elements: [
                     {
                         name: "Disorders_Somatic_Instructions",
-                        html: "Are you currently living with one of the following medically diagnosed condition?",
+                        html: "Are you currently living with any of the following medically diagnosed conditions?",
                         type: "html",
                     },
                     {
