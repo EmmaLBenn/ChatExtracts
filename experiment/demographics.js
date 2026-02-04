@@ -14,22 +14,45 @@ const ConsentForm = {
         // Main Text
         text +=
             // Overview
-            "<p align='left'><b>Invitation to Take Part</b><br>" +
+            "<h4>Invitation to Take Part</h4>" +
             "You are being invited to take part in a research study to further our understanding of perceptions of social interactions. " +
             "Thank you for carefully reading this information sheet. " +
             "This study is being conducted by student researchers Riehana Aziz, Emma Benn, Maisie Bennett, Summer-Lili Cloke and Poppy Duval-Johnston, and project supervisor Dr Dominique Makowski from the School of Psychology, University of Sussex (see contact information below).</p>" +
             // Description
-            "<p align='left'><b>Why have I been invited and what will I do?</b><br>" +
+            "<h4>Why have I been invited and what will I do?</h4>" +
             "This study aims to investigate perceptions of social interactions and how these may differ between conversation topic themes. " +
-            "To begin, you will have to answer a series of questionnaires about you and your feelings. You will then be shown several screenshots of conversations taken from Reddit, with the consent of users for their images to be used during the study. " +
+            "To participate in this study, you will be asked to complete a series of questionnaires related to <b>mood, mental and physical health, social experiences, and attitudes.</b>" +
+            "<p>Before the main task, you will respond to questions about:</p>" +
+            // questionnaires before taks
+            "<ul style='padding-left: 30px;'>" +
+            "<li><b>Social and emotional experiences:</b> Feelings of social and emotional loneliness, and social isolation.</li>" +
+            "<li><b>General well-being:</b> Life satisfaction, mood, and anxiety levels.</li>" +
+            "<li><b>Mental health:</b> Presence of psychiatric disorders (conditions affecting mood, thinking, or behavior) and any current treatments you may be following, ranging from mindfulness practices to medication.</li>" +
+            "<li><b>Physical health:</b> Psychosomatic conditions caused by autonomic nervous system dysfunction, including musculoskeletal, dermatological, cardiovascular, and other related disorders.</li>" +
+            "</ul>" +
+            //Task description
+            "You will then be shown several screenshots of conversations taken from Reddit, with the consent of users for their images to be used during the study. " +
             "Please imagine that you are participating in the interaction while reading the dialogue. After each conversation you will be asked a couple of questions about your experience. " +
-            "To finish, you will have to answer a few questions about you and your social interactions. " +
-            "The whole experiment will take you <b style='color:#FF5722;'>~25 minutes</b> to complete. Please make you sure that you are <b>attentive and in a quiet environment</b>, and that you have time to complete it in one go.</p> " +
+            //Questionaires after tasks
+            "<p>After completing the main task, you will be asked to complete additional questionnaires on:</b></p>" +
+            "<ul style='padding-left: 30px;'>" +
+            "<li><b>Attitudes toward AI:</b> Your general views on AI and beliefs about its current abilities in producing videos, images, and other outputs.</li>" +
+            "<li><b>Social and emotional experiences:</b> Feelings of sympathy and compassion for others, and your ability to take others' perspectives.</li>" +
+            "<li><b>Social behavior:</b> Your social effort and social conscientiousness.</li>" +
+            "<li><b>Self-perception and internal awareness:</b> Your ability to perceive and understand information from internal bodily signals in a variety of contexts, including during sexual activity.</li>" +
+            "</ul>" +
+            "The whole experiment will take you <b style='color:#FE6237;'>~25 minutes</b> to complete. Please make you sure that you are <b>attentive and in a quiet environment</b>, and that you have time to complete it in one go.</p> " +
+            //Note
+            "<p><b style='color:red'>Note:</b> We understand that some of these questions may feel <b>personal or potentially distressing.</b> " +
+            "However, your responses provide important information about the general participant population, which will help us answer our research questions. " +
+            "Your participation is completely <b>voluntary</b>. You are free to <b style='color:#4B0FD6;'>close the webpage at any time</b> if you do not wish to continue. " +
+            "Please be assured that all information you provide will remain <b>completely anonymous</b>.</p>" +
             // Risks
-            "<p align='left'><b>Are there any risks or benefits to taking part?</b><br>" +
-            "<p style='color:#FF5722;'>Content warning: The conversations you will read contain content that some people may find distressing, including themes of alcohol use, self-harm, suicidal thoughts and mental health struggles. You can withdraw from the study at any time by closing the tab.</p> " +
+            "<h4>Are there any risks or benefits to taking part?</h4>" +
+            "<p><b style='color:red'>Content warning:</b> The conversations you will read contain content that some people may find distressing, including themes of <b>alcohol use</b>, <b>self-harm</b>, <b>suicidal thoughts</b> and <b>mental health struggles</b>. " +
+            "As stated above, you can <b style='color:#4B0FD6;'>withdraw from the study at any time</b> by closing the tab.</p> " +
             // Results and personal information
-            "<p align='left'><b>What will happen to the results and my personal information?</b><br>" +
+            "<h4>What will happen to the results and my personal information?</h4>" +
             "The results of this research may be written into a scientific report for a Psychology dissertation and/or publication. We anticipate being able to provide a summary of our findings on request from 30/05/26 (<i style='color:DodgerBlue;'>D.Makowski@sussex.ac.uk</i>). Your anonymity will be ensured in the way described in the consent information below. <b>Please read this information carefully</b> and then, if you wish to take part, please acknowledge that you have fully understood this sheet, and that you consent to take part in the study as it is described here.</p>" +
             "<p align='left'><b>Consent</b><br></p>" +
             // Bullet points
@@ -116,13 +139,10 @@ var demographic_questions = {
                         min: 18,
                         max: 100,
                         placeholder: "e.g., 21",
-                        },
-                     ], 
                     },
-                 {
-        
-       
-
+                ],
+            },
+            {
                 elements: [
                     {
                         title: "What is your highest completed education level?",
@@ -157,7 +177,8 @@ var demographic_questions = {
                         colCount: 1,
                     },
                     {
-                        visibleIf: "{Education} == 'High school' || {Education} == 'Master' || {Education} == 'Bachelor'",
+                        visibleIf:
+                            "{Education} == 'High school' || {Education} == 'Master' || {Education} == 'Bachelor'",
                         title: "Are you currently a student?",
                         name: "Student",
                         type: "boolean",
@@ -203,7 +224,8 @@ var experiment_feedback = {
     type: jsPsychSurvey,
     survey_json: {
         title: "Feedback",
-        description: "It is the end of the experiment! Don't hesitate to leave us a feedback.",
+        description:
+            "It is the end of the experiment! Don't hesitate to leave us a feedback.",
         completeText: "Complete the experiment",
         showQuestionNumbers: false,
         pages: [
@@ -273,18 +295,18 @@ var demographics_debriefing = {
                             "<p>We were also interested in how individual differences - such as loneliness, mental wellbeing, interoceptive awareness, AI familiarity and social motivation - relate to these reactions. Understanding these factors gives insight into why and how people may respond differently to online social partners, informing future research surrounding AI use.</p>" +
                             "<p align='left'><b>Thank you again!</b> Your participation in this study will be kept completely confidential. If you have any questions or concerns about the project, please contact Dr Dominique Makowski (<i style='color:DodgerBlue;'>D.Makowski@sussex.ac.uk</i>), Riehana Aziz (<i style='color:DodgerBlue;'>ra549@sussex.ac.uk</i>), and/or Emma Benn (<i style='color:DodgerBlue;'>eb672@sussex.ac.uk</i>).</p>" +
                             "<h4> To complete your participation in this study, click on 'Continue' and <b>wait until your responses have been successfully saved</b> before closing the tab.</h4><br>" +
-                            "<p style='color: red; font-weight: bold;'>We appreciate that some of the content in this study can be heavy and distressing. If you or someone you know is struggling with their mental health, please do not hesitate to reach out to the following charities for further support.</p>"+
-                            "<p style='color: red;'>If you or someone you know is in immediate danger or thinking about ending their life, please call 999 or go to your nearest A&E.</p>"+
-                            "<p style='color: red;'><b> 24/7 Crisis lines:</b> </p>"+
-                            "<p style='color: red;'>Call The Samaritans on 116 123</p>"+
-                            "<p style='color: red;'>Text 'SHOUT' to 85258</p>"+
-                            "<p style='color: red;'><b>Support via charities:</b></p>"+
-                            "<p style='color: red;'>Call the Mind welfare line, open Monday - Friday (9 am to 5 pm): 0300 123 3393 or visit their website for tools and strategies</p>"+
-                            "<a style='color: red;' href='https://www.mind.org.uk/need-urgent-help/using-this-tool/'>www.mind.org.uk/need-urgent-help</a>"+
+                            "<p style='color: red; font-weight: bold;'>We appreciate that some of the content in this study can be heavy and distressing. If you or someone you know is struggling with their mental health, please do not hesitate to reach out to the following charities for further support.</p>" +
+                            "<p style='color: red;'>If you or someone you know is in immediate danger or thinking about ending their life, please call 999 or go to your nearest A&E.</p>" +
+                            "<p style='color: red;'><b> 24/7 Crisis lines:</b> </p>" +
+                            "<p style='color: red;'>Call The Samaritans on 116 123</p>" +
+                            "<p style='color: red;'>Text 'SHOUT' to 85258</p>" +
+                            "<p style='color: red;'><b>Support via charities:</b></p>" +
+                            "<p style='color: red;'>Call the Mind welfare line, open Monday - Friday (9 am to 5 pm): 0300 123 3393 or visit their website for tools and strategies</p>" +
+                            "<a style='color: red;' href='https://www.mind.org.uk/need-urgent-help/using-this-tool/'>www.mind.org.uk/need-urgent-help</a>" +
                             "<p style='color: red;'>Mental Health Foundation: </p><a style='color: red;' href='https://www.mentalhealth.org.uk/'>www.mentalhealth.org.uk</a>" +
                             "<p style='color: red;'><b>Local support:</b> Use the government website to find support services near you </p><a style='color: red;' href='https://www.nhs.uk/nhs-services/mental-health-services/'>www.nhs.uk/nhs-services/mental-health-services</a><br><br>",
                     },
-                ]
+                ],
             },
         ],
     },
@@ -306,7 +328,9 @@ var demographics_debriefing = {
 var demographics_endscreen = {
     type: jsPsychSurvey,
     survey_json: function () {
-        text = "<h2 style='color:green;'>Data saved successfully!</h2>" + "<p>Thank you for participating, it means a lot to us.</p>"
+        text =
+            "<h2 style='color:green;'>Data saved successfully!</h2>" +
+            "<p>Thank you for participating, it means a lot to us.</p>"
 
         // Snowball
         // text +=
@@ -338,4 +362,3 @@ var demographics_endscreen = {
         screen: "demographics_endscreen",
     },
 }
-
