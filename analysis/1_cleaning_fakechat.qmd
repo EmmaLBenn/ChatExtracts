@@ -1,0 +1,290 @@
+---
+title: "FakeChat - Data Cleaning (Emma)"
+editor: source
+editor_options: 
+  chunk_output_type: console
+format:
+  html:
+    code-fold: true
+    self-contained: false
+    toc: true
+    toc-depth: 3
+execute: 
+  cache: true
+---
+
+```{r}
+#| message: false
+#| warning: false
+
+# Load libraries
+library(tidyverse)
+library(easystats)
+library(patchwork)
+
+# Load data
+df <- read.csv("https://raw.githubusercontent.com/RealityBending/FakeChat/refs/heads/main/data/rawdata_participants.csv")
+
+# Store exclusions
+exclude <- list()
+```
+
+# Attention Checks
+
+```{r}
+checks <- data.frame(
+  Participant = df$Participant,
+  
+  A_MINT = ifelse(df$MINT_AttentionCheck %in% c(0,1), 0, 1),
+  A_BAIT = ifelse(df$BAIT_AttentionCheck %in% c(5,6), 0, 1)
+)
+
+# count failures
+checks$fail <- checks$A_MINT + checks$A_BAIT
+
+# exclude anyone failing at least one
+#exclude$checks <- as.character(
+#  checks$Participant[checks$fail > 0]
+#)
+
+# exclude anyone failing both attention checks
+exclude$checks <- as.character(
+  checks$Participant[checks$fail == 2]
+)
+
+#cat(
+#  "We excluded", length(exclude$checks), "participants (",
+#  insight::format_percent(length(exclude$checks) / nrow(df)),
+#  ") who failed at least one attention check.\n"
+#)
+
+cat(
+  "We excluded", length(exclude$checks), "participants (",
+  insight::format_percent(length(exclude$checks) / nrow(df)),
+  ") who failed both of the attention checks.\n"
+)
+```
+
+# Duration Exclusion
+
+```{r}
+exclude$duration <- as.character(
+  df$Participant[df$Experiment_Duration < 5]
+)
+
+exclude$duration <- exclude$duration[
+  !exclude$duration %in% exclude$checks
+]
+
+cat(
+  "We excluded", length(exclude$duration), "participants (",
+  insight::format_percent(length(exclude$duration) / nrow(df)),
+  ") for having completed the experiment in less than 5 minutes.\n"
+)
+```
+
+# Low Quality Exclusion
+
+```{r}
+exclude$feedback <- as.character(
+  df$Participant[df$Feedback_Quality %in% c(0,1)]
+)
+
+exclude$feedback <- exclude$feedback[
+  !exclude$feedback %in% c(exclude$checks, exclude$duration)
+]
+
+cat(
+  "We excluded", length(exclude$feedback), "participants (",
+  insight::format_percent(length(exclude$feedback) / nrow(df)),
+  ") for self-reporting that they did not do the experiment carefully and thoroughly.\n"
+)
+```
+
+# Remove Excluded Participants
+
+```{r}
+df_clean <- df[
+  !df$Participant %in% c(exclude$checks, exclude$duration, exclude$feedback),
+]
+
+cat("Participants after exclusions: N =", nrow(df_clean), "\n")
+```
+
+# Reverse Code Questionnaire Items
+
+```{r}
+# De Jong - need to reverse score all SocialLoneliness items
+
+df_clean <- df_clean |>
+  mutate(across(starts_with("DeJong_SocialLoneliness"), ~ 3 - .x))
+
+
+# IRI - reverse code items for Affective: 2, 4, 7 - and items for Cognitive: 4
+
+df_clean <- df_clean |>
+  mutate(across(c(
+    IRI_Affective_2,
+    IRI_Affective_4,
+    IRI_Affective_7
+  ), ~ 5 - .x))
+
+df_clean <- df_clean |>
+  mutate(across(
+    IRI_Cognitive_4,
+    ~ 5 - .x
+  ))
+
+
+# RQS - reverse code items: 9, 11, 13, 18, 19
+
+df_clean <- df_clean |>
+  mutate(across(
+    c(RQS_9, RQS_11, RQS_13, RQS_18, RQS_19),
+    ~ 6 - .x
+  ))
+```
+
+# Compute Questionnaire Scores
+
+```{r}
+# compute and remove function
+compute_and_remove <- function(df_clean, name, pattern=name, method="mean") {
+  items <- select(df_clean, starts_with(pattern), -contains("AttentionCheck"))
+  df_clean <- df_clean[!names(df_clean) %in% names(items)]
+  if(method == "mean") {
+    df_clean[[name]] <- rowMeans(items, na.rm=TRUE)
+  } else {
+    df_clean[[name]] <- rowSums(items, na.rm=TRUE)
+  }
+  df_clean
+}
+
+# PHQ-4
+df_clean <- compute_and_remove(df_clean, name="PHQ4_Depression", method="mean")
+df_clean <- compute_and_remove(df_clean, name="PHQ4_Anxiety", method="mean")
+
+# UCLA Loneliness
+
+df_clean <- compute_and_remove(df_clean, "UCLA", method="mean")
+
+# De Jong Loneliness
+
+df_clean <- compute_and_remove(df_clean, name="DeJong_SocialLoneliness", method="mean") 
+df_clean <- compute_and_remove(df_clean, name="DeJong_EmotionalLoneliness", method="mean")
+
+# IRI Empathy
+
+df_clean <- compute_and_remove(df_clean, name="IRI_Affective", method="mean") 
+df_clean <- compute_and_remove(df_clean, name="IRI_Cognitive", method="mean")
+
+# SEACS
+
+df_clean <- compute_and_remove(df_clean, "SEACS_SocialEffort", method="mean")
+df_clean <- compute_and_remove(df_clean, "SEACS_SocialConscientiousness", method="mean")
+
+# RQS
+
+df_clean <- compute_and_remove(df_clean, "RQS", method="mean")
+
+```
+
+# Final Sample
+
+::: {.panel-tabset}
+
+### Summary
+
+
+The final sample includes `r report::report_participants(df_clean, age = "Age", sex = NA, gender = "Gender")`.
+
+
+### Age and Gender
+
+```{r p_demographics_age_gender}
+p_age <- df_clean |>
+  ggplot(aes(x = Age, fill = Gender)) + 
+  geom_histogram(data=df_clean, aes(x = Age, fill=Gender), binwidth = 3) +
+  geom_vline(xintercept = mean(df_clean$Age), color = "red", linewidth=1, linetype="dashed") +
+  scale_fill_viridis_d() +
+  scale_x_continuous(expand = c(0, 0), breaks = seq(20, max(df_clean$Age), by = 10 )) +
+  scale_y_continuous(expand = c(0, 0)) +
+  labs(title = "Age", y = "Number of Participants", color = NULL, subtitle = "Distribution of participants' age") +
+  theme_modern(axis.title.space = 10) +
+  theme(
+    plot.title = element_text(size = rel(1.2), face = "bold", hjust = 0),
+    plot.subtitle = element_text(size = rel(1.2), vjust = 7),
+    axis.text.y = element_text(size = rel(1.1)),
+    axis.text.x = element_text(size = rel(1.1)),
+    axis.title.x = element_blank()
+  )
+
+p_age
+```
+
+### Education
+
+```{r p_demographics_education}
+#| warning: false
+#| error: false
+
+p_edu <- df_clean |>
+  mutate(Student = ifelse(is.na(Student) | (Student == FALSE), "Not studying", "Currently studying"),
+         Education = fct_relevel(Education, "High school", "Bachelor", "Master", "Doctorate")) |>
+  ggplot(aes(x = Education)) +
+  geom_bar(aes(fill = Student)) +
+  scale_y_continuous(expand = c(0, 0), breaks= scales::pretty_breaks()) +
+  labs(title = "Education", y = "Number of Participants", subtitle = "Participants per achieved education level", fill = "Is currently a student") +
+  see::scale_fill_bluebrown_d() +
+  theme_modern(axis.title.space = 15) +
+  theme(
+    plot.title = element_text(size = rel(1.2), face = "bold", hjust = 0),
+    plot.subtitle = element_text(size = rel(1.2)),
+    axis.text.y = element_text(size = rel(1.1)),
+    axis.text.x = element_text(size = rel(0.5), angle = 45, hjust =1),
+    axis.title.x = element_blank()
+  )
+
+p_edu
+```
+
+### Ethnicity
+
+```{r p_demographics_ethnicity}
+#| warning: false
+#| error: false
+
+p_eth <- df_clean |>
+  mutate(Ethnicity = ifelse(is.na(Ethnicity), "Prefer not to answer", Ethnicity)) |>
+  mutate(Freq = format_percent(n() / nrow(df_clean), digits=1), .by=Ethnicity) |> 
+  mutate(Ethnicity = fct_infreq(paste0(Ethnicity, " (", Freq, ")"))) |> 
+  ggplot(aes(x = "", fill = Ethnicity)) +
+  geom_bar() +
+  coord_polar("y") +
+  see::scale_fill_social_d() +
+  labs(title = "Ethnicity", subtitle = "Self-declared ethnicity") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.title.y = element_blank(),
+    plot.title = element_text(size = rel(1.2), face = "bold", hjust = 0),
+    plot.subtitle = element_text(size = rel(1.2))
+  ) 
+    
+p_eth
+```
+
+```{r}
+#| fig-width: 15
+#| fig-height: 12
+
+(p_age / p_edu) | p_eth
+```
+
+# Save data
+
+```{r}
+write.csv(df_clean, "C:/Users/emmal/OneDrive - University of Sussex/GitHub/Dissertation/ChatExtracts/data/FakeChat_data_participants.csv", row.names = FALSE)
+```
