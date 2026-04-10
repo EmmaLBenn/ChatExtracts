@@ -43,26 +43,26 @@ checks <- data.frame(
 checks$fail <- checks$A_MINT + checks$A_BAIT
 
 # exclude anyone failing at least one
-#exclude$checks <- as.character(
-#  checks$Participant[checks$fail > 0]
-#)
-
-# exclude anyone failing both attention checks
 exclude$checks <- as.character(
-  checks$Participant[checks$fail == 2]
+  checks$Participant[checks$fail > 0]
 )
 
-#cat(
-#  "We excluded", length(exclude$checks), "participants (",
-#  insight::format_percent(length(exclude$checks) / nrow(df)),
-#  ") who failed at least one attention check.\n"
+# exclude anyone failing both attention checks
+#exclude$checks <- as.character(
+#  checks$Participant[checks$fail == 2]
 #)
 
 cat(
   "We excluded", length(exclude$checks), "participants (",
   insight::format_percent(length(exclude$checks) / nrow(df)),
-  ") who failed both of the attention checks.\n"
+  ") who failed at least one attention check.\n"
 )
+
+#cat(
+#  "We excluded", length(exclude$checks), "participants (",
+#  insight::format_percent(length(exclude$checks) / nrow(df)),
+#  ") who failed both of the attention checks.\n"
+#)
 ```
 
 # Duration Exclusion
