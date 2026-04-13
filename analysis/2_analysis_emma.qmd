@@ -13,7 +13,7 @@ execute:
   cache: true
 ---
 
-## 0. Load packages
+## 1. Load packages
 
 ```{r}
 #| message: false
@@ -38,519 +38,6 @@ library(ggdist)
 set.seed(42)
 ```
 
-
-## 1. Data Loading & Harmonisation
-
-```{r}
-# ---- Drop Mint items that were removed in Study 2 final selection ----------
-# These clusters were excluded: UrSe (unstable), StaS (vague), SexO (overlaps SexS),
-# CaNo (overlaps CaCo), and any attention check column.
-drop_unused_mint <- function(df) {
-  df |> select(!matches("CaNo|SexO|UrSe|StaS|AttentionCheck", ignore.case = TRUE))
-}
-
-# ---- Convert "TRUE"/"FALSE" character columns to 0/1 numeric ---------------
-convert_logical_cols <- function(df) {
-  df |> mutate(across(
-    where(~ is.character(.x) && all(.x %in% c("TRUE", "FALSE", NA_character_))),
-    ~ as.integer(.x == "TRUE")
-  ))
-}
-
-# ---- Align columns between dataframes for merging --------------------------
-# Ensures both dataframes have the same columns (fills missing with NA)
-align_columns <- function(df1, df2) {
-  all_vars <- union(names(df1), names(df2))
-  df1[setdiff(all_vars, names(df1))] <- NA
-  df2[setdiff(all_vars, names(df2))] <- NA
-  list(df1 = df1, df2 = df2)
-}
-```
-
-### 1b. InteroceptionScale Study 1
-
-```{r}
-interoception1_data <- read.csv("https://raw.githubusercontent.com/RealityBending/InteroceptionScale/refs/heads/main/study1/data/data_participants.csv") |>
-  rename(
-    # Sexual Arousal Sensitivity (SexS)
-    MINT_SexS_9 = Sexual_Genital_Q1,
-    MINT_SexS_7 = Sexual_Genital_Q2,
-    MINT_SexS_8 = Nociception_Genital_Q1,
-    # Cardiorespiratory Confusion (CaCo)
-    MINT_CaCo_11 = Nociception_Respiratory_Q2,
-    MINT_CaCo_12 = Confusion_Cardiac_Q1,
-    MINT_CaCo_10 = Confusion_Respiratory_Q1,
-    # Relaxation Awareness (RelA)
-    MINT_RelA_5 = Sensitivity_State_Q1,
-    MINT_RelA_4 = Sensitivity_State_Q2,
-    MINT_RelA_6 = Sensitivity_State_Q3,
-    # Cardioception (Card)
-    MINT_Card_28 = Sensitivity_Cardiac_Q1,
-    MINT_Card_29 = Sensitivity_Cardiac_Q2,
-    MINT_Card_30 = Sensitivity_Cardiac_Q3,
-    # Respiroception (Resp)
-    MINT_Resp_25 = Sensitivity_Respiratory_Q1,
-    MINT_Resp_26 = Sensitivity_Respiratory_Q3,
-    MINT_Resp_27 = Sensitivity_Respiratory_Q4,
-    # Gastroception (Gast)
-    MINT_Gast_32 = Sensitivity_Gastric_Q1,
-    MINT_Gast_31 = Sensitivity_Gastric_Q2,
-    MINT_Gast_33 = Sensitivity_Gastric_Q3,
-    # Olfactory Compensation (Olfa)
-    MINT_Olfa_23 = Sensitivity_Gastric_Q4,
-    MINT_Olfa_24 = Sensitivity_Gastric_Q5,
-    MINT_Olfa_22 = Sensitivity_SkinThermo_Q5,
-    # Dermal Hypersensitivity (Derm)
-    MINT_Derm_16 = Sensitivity_SkinThermo_Q1,
-    MINT_Derm_18 = Sensitivity_SkinThermo_Q2,
-    MINT_Derm_17 = Sensitivity_SkinThermo_Q7,
-    # Expulsion Accuracy (ExAc)
-    MINT_ExAc_2 = Accuracy_State_Q2,
-    MINT_ExAc_1 = Accuracy_Gastric_Q1,
-    MINT_ExAc_3 = Accuracy_Gastric_Q2,
-    # Satiety Noticing (Sati)
-    MINT_Sati_21 = Accuracy_Gastric_Q4,
-    MINT_Sati_19 = Accuracy_Gastric_Q6,
-    MINT_Sati_20 = Confusion_Gastric_Q2,
-    # Urointestinal Inaccuracy (Urin)
-    MINT_Urin_14 = Accuracy_ColonBladder_Q1,
-    MINT_Urin_13 = Accuracy_ColonBladder_Q5,
-    MINT_Urin_15 = Confusion_ColonBladder_Q1
-  )
-
-# Select first 19 columns (demographics/metadata) + all MINT items
-interoception1_df <- interoception1_data |>
-  select(1:19, contains("MINT_")) |>
-  mutate(Source = "InteroceptionScale_Study1")
-
-cat("Interoception Study 1 loaded: N =", nrow(interoception1_df), "\n")
-cat("Study 1 MINT items:", sum(str_detect(names(interoception1_df), "^MINT_")), "/ 33\n")
-```
-
-Interoception Study 1:  191 participants excluded for failing at least one attention check, and 10 based on measures significantly related to the probability of failing attention checks (namely, the multivariate distance obtained with the OPTICS algorithm, Thériault et al., 2024)
-
-### 1c. InteroceptionScale Study 2
-
-```{r}
-# N=737. Full 33-item Mint + MAIA, IAS, BPQ, demographics, clinical outcomes.
-
-interoception2_df <- read.csv("https://raw.githubusercontent.com/RealityBending/InteroceptionScale/refs/heads/main/study2/data/data_participants.csv") |>
-  mutate(Source = "InteroceptionScale_Study2") |>
-  rename(
-    # Deficit metacluster
-    MINT_Urin_13 = MINT_Deficit_Urin_1,
-    MINT_Urin_14 = MINT_Deficit_Urin_2,
-    MINT_Urin_15 = MINT_Deficit_Urin_3,
-    MINT_CaCo_10 = MINT_Deficit_CaCo_4,
-    MINT_CaCo_11 = MINT_Deficit_CaCo_5,
-    MINT_CaCo_12 = MINT_Deficit_CaCo_6,
-    MINT_Olfa_22 = MINT_Deficit_Olfa_10,
-    MINT_Olfa_23 = MINT_Deficit_Olfa_11,
-    MINT_Olfa_24 = MINT_Deficit_Olfa_12,
-    MINT_Sati_19 = MINT_Deficit_Sati_13,
-    MINT_Sati_20 = MINT_Deficit_Sati_14,
-    MINT_Sati_21 = MINT_Deficit_Sati_15,
-    # Awareness metacluster
-    MINT_SexS_7 = MINT_Awareness_SexS_19,
-    MINT_SexS_9 = MINT_Awareness_SexS_20,
-    MINT_SexS_8 = MINT_Awareness_SexS_21,
-    MINT_RelA_5 = MINT_Awareness_RelA_28,
-    MINT_RelA_4 = MINT_Awareness_RelA_29,
-    MINT_RelA_6 = MINT_Awareness_RelA_30,
-    MINT_ExAc_3 = MINT_Awareness_ExAc_34,
-    MINT_ExAc_1 = MINT_Awareness_ExAc_35,
-    MINT_ExAc_2 = MINT_Awareness_ExAc_36,
-    # Visceroception metacluster
-    MINT_Card_28 = MINT_Sensitivity_Card_37,
-    MINT_Card_30 = MINT_Sensitivity_Card_38,
-    MINT_Card_29 = MINT_Sensitivity_Card_39,
-    MINT_Resp_26 = MINT_Sensitivity_Resp_40,
-    MINT_Resp_27 = MINT_Sensitivity_Resp_41,
-    MINT_Resp_25 = MINT_Sensitivity_Resp_42,
-    MINT_Gast_31 = MINT_Sensitivity_Gast_46,
-    MINT_Gast_32 = MINT_Sensitivity_Gast_47,
-    MINT_Gast_33 = MINT_Sensitivity_Gast_48,
-    MINT_Derm_16 = MINT_Sensitivity_Derm_49,
-    MINT_Derm_17 = MINT_Sensitivity_Derm_50,
-    MINT_Derm_18 = MINT_Sensitivity_Derm_51
-  ) |>
-  convert_logical_cols() |>
-  drop_unused_mint()  # Remove CaNo, SexO, UrSe, StaS
-
-
-cat("Interoception Study 2 loaded: N =", nrow(interoception2_df), "\n")
-```
-
-Interoception Study 2: 118 excluded for failing at least one attention check and 6 based on multivariate distance (using the same procedure as for study 1). 60 excluded due to missing data from a technical issue.
-
-### 1d. FakeArt Dataset
-
-```{r}
-# N=359. Mint items already use MINT_Facet_N naming (matching Study 2 after renaming).
-
-fakeart_df <- read.csv("https://raw.githubusercontent.com/RealityBending/FakeArt/refs/heads/main/data/rawdata_participants.csv") |>
-  mutate(Source = "FakeArt")
-
-# compute and remove function
-compute_and_remove <- function(fakeart_df, name="BodyAwareness", pattern=name, method="mean") {
-  items <- select(fakeart_df, starts_with(pattern), -contains("AttentionCheck"))
-  fakeart_df <- fakeart_df[!names(fakeart_df) %in% names(items)]
-  if(method == "mean") {
-    fakeart_df[[name]] <- rowMeans(items, na.rm=TRUE)
-  } else {
-    fakeart_df[[name]] <- rowSums(items, na.rm=TRUE)
-  }
-  fakeart_df
-}
-
-# PHQ-4
-fakeart_df <- compute_and_remove(fakeart_df, name="PHQ4_Depression", method="mean")
-fakeart_df <- compute_and_remove(fakeart_df, name="PHQ4_Anxiety", method="mean")
-
-# VVIQ
-fakeart_df <- compute_and_remove(fakeart_df, name="VVIQ_Friend", method="mean")
-fakeart_df <- compute_and_remove(fakeart_df, name="VVIQ_Sun", method="mean")
-fakeart_df <- compute_and_remove(fakeart_df, name="VVIQ_Shop", method="mean")
-fakeart_df <- compute_and_remove(fakeart_df, name="VVIQ_Country", method="mean")
-
-fakeart_df$VVIQ_Total = rowMeans(fakeart_df[c("VVIQ_Friend", "VVIQ_Sun", "VVIQ_Shop", "VVIQ_Country")], na.rm = TRUE) |> 
-  datawizard::reverse_scale()  # Reverse the scale (e.g., 0–4 -> 4–0) so that higher = more vivid
-fakeart_df <- select(fakeart_df, -VVIQ_Friend, -VVIQ_Sun, -VVIQ_Shop, -VVIQ_Country)
-
-# BAIT
-fakeart_df$BAIT_Negative <- rowMeans(select(fakeart_df, BAIT_8_TextIssues, BAIT_2_ImagesIssues, BAIT_3_VideosIssues, BAIT_9_Dangerous, BAIT_13_ArtIssues), na.rm=TRUE)
-fakeart_df$BAIT_Positive <- rowMeans(select(fakeart_df, BAIT_5_ImitatingReality, BAIT_12_Benefit, BAIT_4_VideosRealistic, BAIT_1_ImagesRealistic, BAIT_14_ArtRealistic, BAIT_6_EnvironmentReal, BAIT_7_TextRealistic), na.rm=TRUE)
-fakeart_df$BAIT_ArtRealistic <- rowMeans(select(mutate(fakeart_df, BAIT_13_ArtIssues = abs(BAIT_13_ArtIssues - 6)), BAIT_13_ArtIssues, BAIT_14_ArtRealistic), na.rm=TRUE)
-fakeart_df$BAIT_Total <- rowMeans(select(mutate(fakeart_df, BAIT_Negative = abs(BAIT_Negative - 6)), BAIT_Negative, BAIT_Positive), na.rm=TRUE)
-
-## Exclusions 
-exclude <- list()
-
-# Attention checks
-
-fakeart_checks <- data.frame(
-  Participant = fakeart_df$Participant,
-  A_MINT = ifelse(fakeart_df$MINT_AttentionCheck == 0, 0, 1),
-  A_BAIT = ifelse(fakeart_df$BAIT_AttentionCheck == 6, 0, 1)
-)
-fakeart_checks$fail <- fakeart_checks$A_MINT + fakeart_checks$A_BAIT
-exclude$checks <- as.character(fakeart_checks$Participant[fakeart_checks$fail > 0])
-
-fakeart_df <- fakeart_df[!fakeart_df$Participant %in% exclude$checks, ]
-
-cat(
-  "We excluded", length(exclude$checks), "participants (",
-  insight::format_percent(length(exclude$checks) / nrow(fakeart_df)),
-  ") who failed at least one attention check.\n"
-)
-cat("FakeArt loaded: N =", nrow(fakeart_df), "\n")
-```
-
-### 1e. FakeChat Dataset
-
-```{r}
-fakechat_df <- read.csv("https://raw.githubusercontent.com/EmmaLBenn/ChatExtracts/refs/heads/main/data/FakeChat_data_participants.csv") |>
-  mutate(Source = "FakeChat")
-
-cat("FakeChat loaded: N =", nrow(fakechat_df), "\n")
-```
- 
-FakeChat: 58 participants excluded for failing at least one attention check.
- 
-### 1f. Merge All Datasets
-
-```{r}
-# combine all datasets
-datasets <- list(
-  interoception1_df,
-  interoception2_df,
-  fakeart_df,
-  fakechat_df
-)
-
-mega_df <- bind_rows(datasets)
-
-# datasets <- append(datasets, list(new_dataset))   ## use to add more data if necessary
-
-cat("\n=== FINAL MERGED DATASET ===\n")
-cat("Total N =", nrow(mega_df), "\n")
-
-cat("Sources:\n")
-print(table(mega_df$Source, useNA = "ifany"))
-
-# Identify MINT items
-mint_items <- select(mega_df, starts_with("MINT_")) |>
-  select(-MINT_AttentionCheck)
-
-cat("\nMINT items in merged dataset:", length(mint_items), "\n")
-
-# Missingness check by dataset
-#mega_df |>
-#  group_by(Source) |>
-#  summarise(
-#    n = n(),
-#    pct_missing_mint = round(mean(is.na(across(all_of(mint_items)))), 3),
-#    .groups = "drop"
-#  ) |>
-#  print()
-```
-
-
-## Final Sample
-
-::: {.panel-tabset}
-
-The final sample includes `r report::report_participants(mega_df, age = "Age", sex = NA, gender = "Gender")`.
-
-### Age and Gender
-
-```{r p_demographics_age_gender}
-p_age <- mega_df |>
-  ggplot(aes(x = Age, fill = Gender)) + 
-  geom_histogram(data=mega_df, aes(x = Age, fill=Gender), binwidth = 2) +
-  geom_vline(xintercept = mean(df$Age), color = "red", linewidth=1.5, linetype="dashed") +
-  scale_fill_viridis_d() +
-  scale_x_continuous(expand = c(0, 0), breaks = seq(20, max(df$Age), by = 10 )) +
-  scale_y_continuous(expand = c(0, 0)) +
-  labs(title = "Age", y = "Number of Participants", color = NULL, subtitle = "Distribution of participants' age") +
-  theme_modern(axis.title.space = 10) +
-  theme(
-    plot.title = element_text(size = rel(1.2), face = "bold", hjust = 0),
-    plot.subtitle = element_text(size = rel(1.2), vjust = 7),
-    axis.text.y = element_text(size = rel(1.1)),
-    axis.text.x = element_text(size = rel(1.1)),
-    axis.title.x = element_blank()
-  )
-
-p_age
-```
-
-### Education
-
-```{r p_demographics_education}
-#| warning: false
-#| error: false
-
-p_edu <- mega_df |>
-  mutate(Student = ifelse(is.na(Student), FALSE, Student),
-         Education = fct_relevel(Education, "High school", "Bachelor", "Master", "Doctorate")) |>
-  ggplot(aes(x = Education)) +
-  geom_bar(aes(fill = Student)) +
-  scale_y_continuous(expand = c(0, 0), breaks= scales::pretty_breaks()) +
-  labs(title = "Education", y = "Number of Participants", subtitle = "Participants per achieved education level", fill = "Is currently a student") +
-  theme_modern(axis.title.space = 15) +
-  theme(
-    plot.title = element_text(size = rel(1.2), face = "bold", hjust = 0),
-    plot.subtitle = element_text(size = rel(1.2), vjust = 7),
-    axis.text.y = element_text(size = rel(1.1)),
-    axis.text.x = element_text(size = rel(0.5), angle = 45, hjust =1),
-    axis.title.x = element_blank()
-  )
-
-p_edu
-```
-
-### Ethnicity
-
-```{r p_demographics_ethnicity}
-#| warning: false
-#| error: false
-
-p_eth <- mega_df |>
-  filter(!is.na(Ethnicity)) |> 
-  ggplot(aes(x = "", fill = Ethnicity)) +
-  geom_bar() +
-  coord_polar("y") +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_blank(),
-    axis.title.x = element_blank(),
-    axis.text.y = element_blank(),
-    axis.title.y = element_blank()
-  )
-    
-p_eth
-```
-
-### Mental Health
-
-
-```{r}
-mega_df$Disorders_Psychiatric_Mood <- ifelse(str_detect(df$Disorders_Psychiatric, "MDD|GAD|Bipolar"), TRUE, FALSE)
-mega_df$Disorders_Psychiatric_MoodTreatment <- ifelse(
-  mega_df$Disorders_Psychiatric_Mood & !is.na(mega_df$Disorders_PsychiatricTreatment) & str_detect(mega_df$Disorders_PsychiatricTreatment, "Mood|Antidepressant|Anxiolytic|Psychotherapy"), TRUE, FALSE)
-
-mega_df$Disorders_Psychiatric_Anxiety <- ifelse(str_detect(mega_df$Disorders_Psychiatric, "Panic|GAD|Social Phobia|Phobia"), TRUE, FALSE)
-mega_df$Disorders_Psychiatric_AnxietyTreatment <- ifelse(
-  mega_df$Disorders_Psychiatric_Anxiety & !is.na(mega_df$Disorders_PsychiatricTreatment) & str_detect(mega_df$Disorders_PsychiatricTreatment, "Anxiolytic|Psychotherapy|Mindfulness"), TRUE, FALSE)
-
-mega_df$Disorders_Psychiatric_Eating <- ifelse(str_detect(mega_df$Disorders_Psychiatric, "Eating"), TRUE, FALSE)
-mega_df$Disorders_Psychiatric_Addiction <- ifelse(str_detect(mega_df$Disorders_Psychiatric, "Addiction"), TRUE, FALSE)
-mega_df$Disorders_Psychiatric_Borderline <- ifelse(str_detect(mega_df$Disorders_Psychiatric, "BPD"), TRUE, FALSE)
-
-mega_df$Disorders_Psychiatric_Autism <- ifelse(str_detect(mega_df$Disorders_Psychiatric, "ASD"), TRUE, FALSE)
-mega_df$Disorders_Psychiatric_ADHD <- ifelse(str_detect(mega_df$Disorders_Psychiatric, "ADHD"), TRUE, FALSE)
-
-
-# df$Disorders_Psychiatric_Other <- ifelse(str_detect(df$Disorders_Psychiatric, "MDD|GAD|Bipolar"), TRUE, FALSE)
-
-select(mega_df, Participant, Gender, 
-             Disorders_Psychiatric_Mood, Disorders_Psychiatric_MoodTreatment,
-             Disorders_Psychiatric_Anxiety, Disorders_Psychiatric_AnxietyTreatment,
-             Disorders_Psychiatric_Eating, Disorders_Psychiatric_Addiction, Disorders_Psychiatric_Borderline,
-             Disorders_Psychiatric_Autism, Disorders_Psychiatric_ADHD) |> 
-  pivot_longer(cols = starts_with("Disorders_"), names_to = "Disorder", values_to = "Value") |> 
-  mutate(Disorder = str_remove_all(Disorder, fixed("Disorders_Psychiatric_")),
-         Disorder = str_replace(Disorder, "MoodTreatment", "Mood Disorder (with treatment)"),
-         Disorder = str_replace(Disorder, "AnxietyTreatment", "Anxiety (with treatment)"),
-         Disorder = str_replace(Disorder, "Mood$", "Mood Disorder")) |> 
-  summarize(N = sum(Value) / nrow(mega_df), .by=c("Gender", "Disorder")) |> 
-  mutate(N_tot = sum(N), .by="Disorder") |>
-  mutate(Disorder = fct_reorder(Disorder, desc(N_tot)),
-         Treatment = ifelse(str_detect(Disorder,  "Treatment"), "With treatment", "Without treatment")) |>
-  ggplot(aes(x = Disorder, y = N, fill=Gender)) +
-  geom_bar(stat = "identity") +
-  scale_fill_manual(values = c("Male"= "#64B5F6", "Female"= "#F06292", "Other"="orange", "Missing"="brown")) +
-  scale_y_continuous(expand = c(0, 0), labels=scales::percent) +
-  labs(title = "Mood Disorders", y = "Number of Participants", subtitle = "Participants per self-declared mood disorder", x="Type") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
-```
-
-
-### Somatic
-
-```{r}
-somatic <- data.frame(
-  Hypermobility = ifelse(str_detect(mega_df$Disorders_Somatic, "Hypermobility Syndrome"), TRUE, FALSE),
-  Fibromyalgia = ifelse(str_detect(mega_df$Disorders_Somatic, "Fibromyalgia"), TRUE, FALSE),
-  ChronicFatigue = ifelse(str_detect(mega_df$Disorders_Somatic, "Chronic Fatigue Syndrome"), TRUE, FALSE),
-  ChronicPain = ifelse(str_detect(mega_df$Disorders_Somatic, "Chronic Pain Syndrome"), TRUE, FALSE),
-  BackPain = ifelse(str_detect(mega_df$Disorders_Somatic, "Back Pain"), TRUE, FALSE),
-  MuscleTension = ifelse(str_detect(mega_df$Disorders_Somatic, "Muscle Tension"), TRUE, FALSE),
-  SkinRashes = ifelse(str_detect(mega_df$Disorders_Somatic, "Skin Rashes"), TRUE, FALSE),
-  Eczema = ifelse(str_detect(mega_df$Disorders_Somatic, "Eczema"), TRUE, FALSE),
-  Psoriasis = ifelse(str_detect(mega_df$Disorders_Somatic, "Psoriasis"), TRUE, FALSE),
-   # Dermatological = ifelse(str_detect(df$Disorders_Somatic, "Other Dermatological"), TRUE, FALSE),
-  # Musculoskeletal = ifelse(str_detect(df$Disorders_Somatic, "Other Musculoskeletal"), TRUE, FALSE),
-  Sjogrens = ifelse(str_detect(mega_df$Disorders_Somatic, "Sjogren"), TRUE, FALSE),
-  ChestPain = ifelse(str_detect(mega_df$Disorders_Somatic, "Chest Pain"), TRUE, FALSE),
-  Arrhythmia = ifelse(str_detect(mega_df$Disorders_Somatic, "Cardiac Arrhythmia"), TRUE, FALSE),
-  Hypertension = ifelse(str_detect(mega_df$Disorders_Somatic, "Hypertension"), TRUE, FALSE),
-  Hypotension = ifelse(str_detect(mega_df$Disorders_Somatic, "Hypotension"), TRUE, FALSE),
-  IBS = ifelse(str_detect(mega_df$Disorders_Somatic, "IBS"), TRUE, FALSE),
-  GERD = ifelse(str_detect(mega_df$Disorders_Somatic, "GERD"), TRUE, FALSE),
-  Crohn = ifelse(str_detect(mega_df$Disorders_Somatic, "Crohn"), TRUE, FALSE),
-  UlcerativeColitis = ifelse(str_detect(mega_df$Disorders_Somatic, "Ulcerative Colitis"), TRUE, FALSE),
-  Celiac = ifelse(str_detect(mega_df$Disorders_Somatic, "Celiac Disease"), TRUE, FALSE),
-  Gluten = ifelse(str_detect(mega_df$Disorders_Somatic, "Gluten"), TRUE, FALSE),
-  Lactose = ifelse(str_detect(mega_df$Disorders_Somatic, "Lactose"), TRUE, FALSE),
-  ShortBreath = ifelse(str_detect(mega_df$Disorders_Somatic, "Shortness of Breath"), TRUE, FALSE),
-  Asthma = ifelse(str_detect(mega_df$Disorders_Somatic, "Asthma"), TRUE, FALSE),
-  COPD = ifelse(str_detect(mega_df$Disorders_Somatic, "COPD"), TRUE, FALSE),
-  SleepApnea = ifelse(str_detect(mega_df$Disorders_Somatic, "Sleep Apnea"), TRUE, FALSE),
-  Bronchitis = ifelse(str_detect(mega_df$Disorders_Somatic, "Chronic Bronchitis"), TRUE, FALSE),
-  Nausea = ifelse(str_detect(mega_df$Disorders_Somatic, "Nausea/Vomiting"), TRUE, FALSE),
-  Dizziness = ifelse(str_detect(mega_df$Disorders_Somatic, "Dizziness/Lightheadedness"), TRUE, FALSE),
-  Migraine = ifelse(str_detect(mega_df$Disorders_Somatic, "Migraine"), TRUE, FALSE),
-  Neuropathy = ifelse(str_detect(mega_df$Disorders_Somatic, "Neuropathy"), TRUE, FALSE),
-  Epilepsy = ifelse(str_detect(mega_df$Disorders_Somatic, "Epilepsy"), TRUE, FALSE),
-  MS = ifelse(str_detect(mega_df$Disorders_Somatic, "Multiple Sclerosis"), TRUE, FALSE),
-  FrequentUrination = ifelse(str_detect(mega_df$Disorders_Somatic, "Frequent Urination"), TRUE, FALSE),
-  Endometriosis = ifelse(str_detect(mega_df$Disorders_Somatic, "Endometriosis"), TRUE, FALSE),
-  Cystitis = ifelse(str_detect(mega_df$Disorders_Somatic, "Interstitial Cystitis"), TRUE, FALSE),
-  PelvicPain = ifelse(str_detect(mega_df$Disorders_Somatic, "Chronic Pelvic Pain Syndrome"), TRUE, FALSE)
-)
-
-
-somatic |> 
-  select(where(~n_distinct(.) > 1)) |> 
-  correlation::correlation(redundant = TRUE, p_adjust="none") |>
-  correlation::cor_sort() |> 
-  mutate(label = ifelse(p < .001, "*", ""),
-         label = ifelse(r == 1, "", label)) |> 
-  ggplot(aes(x=Parameter1, y=Parameter2, fill=r)) +
-  geom_tile() +
-  geom_text(aes(label=label), size=3) +
-  scale_fill_gradient2(low="blue", high="red", mid="white", midpoint=0) +
-  labs(title = "Co-occurence Matrix of Somatic Disorders") +
-  theme_minimal()  +
-  theme(axis.text.x = element_text(angle=45, hjust=1),
-        axis.title = element_blank())
-```
-
-To facilitate mechanistic interpretation and reduce redundancy, self-reported somatic symptoms were grouped into four non-overlapping clusters based on shared physiological pathways and known etiological mechanisms. The **Afferent Sensitivity** cluster included conditions associated with heightened interoceptive awareness and neurogenic excitability, such as migraine, neuropathy, dizziness, nausea, muscle tension, epilepsy, and frequent urination. The **Central Sensitization** cluster comprised syndromes characterized by chronic pain and fatigue, likely reflecting central amplification of sensory signals and HPA-axis dysregulation; this included fibromyalgia, chronic fatigue syndrome, chronic pain, back pain, pelvic pain, endometriosis, irritable bowel syndrome (IBS), and interstitial cystitis. The **Autonomic Dysfunction** cluster captured disorders linked to dysregulation of the autonomic and cardiopulmonary systems, including joint hypermobility, cardiac arrhythmia, chest pain, shortness of breath, hypo-/hypertension, sleep apnea, chronic obstructive pulmonary disease (COPD), and chronic bronchitis. Finally, the **Immune-Inflammatory** cluster encompassed conditions associated with immune dysregulation, barrier dysfunction, and gut-brain axis disturbance, such as eczema, psoriasis, skin rashes, asthma, celiac disease, gluten and lactose sensitivity, inflammatory bowel diseases (Crohn’s disease and ulcerative colitis), gastroesophageal reflux disease (GERD), multiple sclerosis, and Sjögren’s syndrome. Each symptom was assigned to a single cluster to preserve orthogonality and support subsequent analyses linking symptom profiles to interoceptive processes.
-
-```{r}
-# df$Disorders_Somatic_Number <- ifelse(df$Disorders_Somatic == "", 0, str_count(df$Disorders_Somatic, ";")+1)
-
-# Cluster A: Afferent Sensitivity (neurogenic excitability, interoceptive hypervigilance)
-mega_df$Disorders_Somatic_AfferentSensitivity_N <- rowSums(somatic[, c(
-  "Migraine", "Neuropathy", "MuscleTension", "Dizziness", 
-  "Nausea", "Epilepsy", "FrequentUrination"
-)])
-mega_df$Disorders_Somatic_AfferentSensitivity <- mega_df$Disorders_Somatic_AfferentSensitivity_N >= 1
-
-# Cluster B: Central Sensitization (pain and fatigue syndromes)
-mega_df$Disorders_Somatic_CentralSensitization_N <- rowSums(somatic[, c(
-  "Fibromyalgia", "ChronicPain", "ChronicFatigue", "BackPain", 
-  "PelvicPain", "Endometriosis", "IBS", "Cystitis"
-)])
-mega_df$Disorders_Somatic_CentralSensitization <- mega_df$Disorders_Somatic_CentralSensitization_N >= 1
-
-# Cluster C: Autonomic Dysfunction (dysautonomia and cardiorespiratory instability)
-mega_df$Disorders_Somatic_AutonomicDysfunction_N <- rowSums(somatic[, c(
-  "Hypermobility", "Arrhythmia", "ChestPain", "ShortBreath", 
-  "Hypotension", "Hypertension", "SleepApnea", "COPD", "Bronchitis"
-)])
-mega_df$Disorders_Somatic_AutonomicDysfunction <- mega_df$Disorders_Somatic_AutonomicDysfunction_N >= 1
-
-# Cluster D: Immune-Inflammatory (gut-brain axis, autoimmune and barrier-related conditions)
-mega_df$Disorders_Somatic_ImmuneInflammatory_N <- rowSums(somatic[, c(
-  "SkinRashes", "Eczema", "Psoriasis", "Sjogrens", "Asthma", 
-  "Celiac", "Gluten", "Lactose", "Crohn", "UlcerativeColitis", 
-  "GERD", "MS"
-)])
-mega_df$Disorders_Somatic_ImmuneInflammatory <- mega_df$Disorders_Somatic_ImmuneInflammatory_N >= 1
-
-
-
-
-p2 <- mega_df |> 
-  select(starts_with("Disorders_Somatic_"), Gender, Participant) |> 
-  select(ends_with("_N"), Gender, Participant) |>
-  pivot_longer(starts_with("Disorders_Somatic_")) |> 
-  summarize(n = n(), .by=c("name", "value", "Gender")) |> 
-  mutate(name = str_remove(name, "Disorders_Somatic_"),
-         name = str_remove(name, "_N")) |> 
-  ggplot(aes(x = value, y=n, fill=Gender)) +
-  geom_bar(stat="identity") +
-  scale_fill_manual(values = c("Male"= "#64B5F6", "Female"= "#F06292", "Other"="orange", "Missing"="brown")) +
-  scale_y_continuous(expand = c(0, 0)) +
-  labs(title = "Somatic Issues", y = "Number of Participants", subtitle = "Participants per somatic issues", x="Number of Issues") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  facet_wrap(~name)
-p2
-# 
-# p2 <- mega_df |> 
-#   select(starts_with("Disorders_Somatic_"), Gender, Participant) |> 
-#   select(-ends_with("_N"), Gender, Participant) |>
-#   pivot_longer(starts_with("Disorders_Somatic_")) |> 
-#   summarize(n = n(), .by=c("name", "value", "Gender")) |> 
-#   filter(value == TRUE) |> 
-#   ggplot(aes(x = name, y=n, fill=Gender)) +
-#   geom_bar(stat="identity") +
-#   scale_fill_manual(values = c("Male"= "#64B5F6", "Female"= "#F06292", "Other"="orange", "Missing"="brown")) +
-#   scale_y_continuous(expand = c(0, 0)) +
-#   labs(title = "Somatic Issues", y = "Number of Participants", subtitle = "Participants per somatic issues", x="Type") +
-#   theme_minimal() +
-#   theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
-# p2
-```
-
-
-:::
 
 ## 2. Compute Facet & Metacluster Scores
 
@@ -749,7 +236,7 @@ Results suggest a bifactor structure fits better than just correlated lower-orde
 ## 4. Transpose data to make participants into columns
 
 ```{r}
-transposed_mint_lowerorder <- as.data.frame(t(mint_lowerorder))
+#transposed_mint_lowerorder <- as.data.frame(t(mint_lowerorder))
 ```
 
 
@@ -871,6 +358,8 @@ plot(rez_pam) + theme_modern()
 #plot(rez_hclust2) + theme_modern() # Visualize
 ```
 
+Suggests the existence of 0 clusters.
+
 ### 5g. DBSCAN - REMOVE?
 
 ```{r}
@@ -886,6 +375,9 @@ rez_dbscan
 plot(rez_dbscan) + theme_modern() # Visualize
 ```
 
+Suggests the existence of 1 cluster.
+The 2 clusters accounted for 1.47% of the total variance of the original data.
+
 ### 5h. Hierarchical DBSCAN - REMOVE?
 
 ```{r}
@@ -896,6 +388,9 @@ rez_hdbscan
 # Visualize
 plot(rez_hdbscan) + theme_modern()
 ```
+
+The unique cluster accounted for 0.00% of the total variance of the original data.
+Suggests the existance of 0 clusters.
 
 ### 5i. K-Medoids with estimation of number of clusters (pamk)
 
@@ -908,6 +403,8 @@ rez_pamk
 plot(rez_pamk) + theme_modern()
 ```
 
+The 2 clusters accounted for 17.50% of the total variance of the original data.
+
 ### 5j. Mixture - REMOVE?
 
 ```{r}
@@ -919,6 +416,7 @@ rez_mixture
 plot(rez_mixture) + theme_modern()
 ```
 
+The 4 clusters accounted for 13.43% of the total variance of the original data.
 
 ## 6. Metaclustering
 
