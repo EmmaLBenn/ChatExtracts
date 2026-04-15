@@ -13,14 +13,13 @@ execute:
   cache: true
 ---
 
-## 1. Load packages
+# 1. Load packages and data
 
 ```{r}
 #| message: false
 #| warning: false
 
-library(tidyverse)
-library(easystats)
+library(sjmisc)
 library(cluster)
 library(factoextra)
 library(mclust)
@@ -34,14 +33,22 @@ library(umap)
 library(Rtsne)
 library(EGAnet)
 library(ggdist)
+library(effectsize)
+library(tidyverse)
+library(easystats)
 
 set.seed(42)
+
+mega_df <- read.csv("https://raw.githubusercontent.com/EmmaLBenn/ChatExtracts/refs/heads/main/data/Emma_dissertationdata.csv")
 ```
 
 
-## 2. Compute Facet & Metacluster Scores
+# 2. Compute Facet & Metacluster Scores
 
 ```{r}
+mint_items <- select(mega_df, starts_with("MINT_")) |>
+  select(-MINT_AttentionCheck)
+
 # Lower order facet scores (mean of 3 items each)
 mega_df <- mega_df |>
   mutate(
@@ -82,7 +89,7 @@ cat("Sources included:", paste(unique(mega_df$Source), collapse = ", "), "\n")
 names(mint_items) <- str_remove(names(mint_items), "MINT_")
 ```
 
-### 2b. Item Labels
+## 2.1. Item Labels
 
 ```{r}
 labels <- list(
@@ -177,7 +184,7 @@ cleanlabels <- function(x, qname=FALSE) {
 ```
 
 
-## 3. Replicate EGA from InteroceptionScale Study 2
+# 3. Replicate EGA from InteroceptionScale Study 2
 
 ```{r}
 #| eval: false
@@ -233,24 +240,14 @@ More negative TEFI = better fit of bifactor/hierarchical model.
 Results suggest a bifactor structure fits better than just correlated lower-order factors.
 
 
-## 4. Transpose data to make participants into columns
-
-```{r}
-#transposed_mint_lowerorder <- as.data.frame(t(mint_lowerorder))
-```
-
-
-## 5. Clustering
+# 4. Clustering
 
 ```{r}
 # Scale data
-
 mint_scaled <- as.data.frame(scale(mint_lowerorder))
-
 ```
 
-
-### 5a. Estimate Number of Clusters
+## 4.1. Estimate Number of Clusters
 
 ```{r}
 cluster_estimate <- n_clusters(
@@ -264,107 +261,74 @@ plot(cluster_estimate)
 ```
 
 Method Agreement Procedure:
-The choice of 2 clusters is supported by 9 (31.03%) methods out of 29 (Elbow, Silhouette, Ch, CCC, DB, Duda, Pseudot2, Beale, Mcclain).
+The choice of 3 clusters is supported by 10 (34.48%) methods out of 29 (Hartigan, Scott, trcovw, Tracew, Friedman, Rubin, Ratkowsky, Ball, SDindex, Mixture (VVE)).
 
-3 clusters also appears to be equally supported.
-
-Cluster estimation suggested 2–3 clusters. While a 2-cluster solution captured a general low vs high distinction, a 3-cluster solution revealed an additional subgroup characterised by globally reduced interoceptive sensitivity. Given its interpretability and theoretical relevance, the 3-cluster solution was retained.
-
-### 5b. Kmeans
+## 4.2. Kmeans
 
 ```{r}
-# 2 clusters
-
-rez_kmeans2 <- cluster_analysis(mint_scaled, n = 2, method = "kmeans")
-
-rez_kmeans2
-
-plot(summary(rez_kmeans2)) # Visualize cluster centers
-
-predict(rez_kmeans2) # Get clusters
-
-
 # 3 clusters
 
 rez_kmeans3 <- cluster_analysis(mint_scaled, n = 3, method = "kmeans")
 
 rez_kmeans3
 
-plot(summary(rez_kmeans3)) # Visualize cluster centers
+plot(rez_kmeans3)
 
 predict(rez_kmeans3) # Get clusters
 ```
 
-Cluster 1 (Low across most facets) - Globally low interoception
+Cluster 2 (Low across most facets) - Globally low interoception
 Especially low on:
 Cardioception (-0.84)
 Respiroception (-0.82)
 Dermal Hypersensitivity (-0.58)
 
-Cluster 2 - High awareness/relatively low confusion
+Cluster 3 - High awareness/relatively low confusion
 High on: Awareness facets (SexS, ExAc, RelA) and Visceroception (Card, Resp, Gast)
 But slightly low on deficit facets (CaCo, Urin)
 
-Cluster 3 (Mixed pattern) - High confusion/dysregulated interoception
+Cluster 1 (Mixed pattern) - High confusion/dysregulated interoception
 High on Deficit facets (CaCo = +0.94, Urin = +0.71)
 Moderate/high elsewhere
 
-
-### 5c. Hierarchical Clustering
+## 4.3. Hierarchical Clustering
 
 ```{r}
 rez_hclust <- cluster_analysis(mint_scaled, n = 3, method = "hclust")
 
 rez_hclust
 
-# Visualize
 plot(rez_hclust) + theme_modern()
 
 predict(rez_hclust)
 ```
 
-### 5d. Hierarchical K-Means
+## 4.4. Hierarchical K-Means
 
 ```{r}
 rez_hkmeans <- cluster_analysis(mint_scaled, n = 3, method = "hkmeans")
 
 rez_hkmeans
+
+plot(rez_hkmeans) + theme_modern()
 ```
 
-### 5e. K-Medoids (PAM)
+## 4.5. K-Medoids (PAM)
 
 ```{r}
 rez_pam <- cluster_analysis(mint_scaled, n = 3, method = "pam")
 
 rez_pam
 
-# Visualize
 plot(rez_pam) + theme_modern()
 ```
 
-### 5f. Bootstrapped Hierarchical Clustering
-
-```{r}
-# WARNING - SLOW
-
-#rez_hclust2 <- cluster_analysis(mint_scaled,
-#  n = NULL,
-#  method = "hclust",
-#  iterations = 500,
-#  ci = 0.90
-#)
-
-#rez_hclust2
-#plot(rez_hclust2) + theme_modern() # Visualize
-```
-
-Suggests the existence of 0 clusters.
-
-### 5g. DBSCAN - REMOVE?
+## 4.6. DBSCAN
 
 ```{r}
 eps <- n_clusters_dbscan(mint_scaled, min_size = 0.1)
 eps
+
 plot(eps) # Find the 'elbow' of the curve: 4.25
 ```
 
@@ -372,65 +336,389 @@ plot(eps) # Find the 'elbow' of the curve: 4.25
 rez_dbscan <- cluster_analysis(mint_scaled, method = "dbscan", dbscan_eps = 4.25)
 
 rez_dbscan
-plot(rez_dbscan) + theme_modern() # Visualize
+
+plot(rez_dbscan) + theme_modern()
 ```
 
 Suggests the existence of 1 cluster.
 The 2 clusters accounted for 1.47% of the total variance of the original data.
 
-### 5h. Hierarchical DBSCAN - REMOVE?
-
-```{r}
-rez_hdbscan <- cluster_analysis(mint_scaled, method = "hdbscan")
-
-rez_hdbscan
-
-# Visualize
-plot(rez_hdbscan) + theme_modern()
-```
-
-The unique cluster accounted for 0.00% of the total variance of the original data.
-Suggests the existance of 0 clusters.
-
-### 5i. K-Medoids with estimation of number of clusters (pamk)
+## 4.7. K-Medoids with estimation of number of clusters (pamk)
 
 ```{r}
 rez_pamk <- cluster_analysis(mint_scaled, method = "pamk")
 
 rez_pamk
 
-# Visualize
 plot(rez_pamk) + theme_modern()
 ```
 
 The 2 clusters accounted for 17.50% of the total variance of the original data.
 
-### 5j. Mixture - REMOVE?
+## 4.8. Mixture
 
 ```{r}
 rez_mixture <- cluster_analysis(mint_scaled, method = "mixture")
 
 rez_mixture
 
-# Visualize
 plot(rez_mixture) + theme_modern()
 ```
 
 The 4 clusters accounted for 13.43% of the total variance of the original data.
 
-## 6. Metaclustering
+
+# 5. Metaclustering
 
 ```{r}
 list_of_results <- list(
-  rez_kmeans3, rez_hclust, rez_hkmeans, rez_pam, rez_pamk
+  rez_kmeans3, rez_hclust, rez_hkmeans, rez_pam, rez_pamk, rez_mixture, rez_dbscan
 )
 
 probability_matrix <- cluster_meta(list_of_results)
 
 # Plot the matrix as a reordered heatmap
-heatmap(unclass(probability_matrix),
+heatmap <- stats::heatmap(probability_matrix,
   scale = "none",
   col = grDevices::hcl.colors(256, palette = "inferno")
 )
+heatmap
 ```
 
+
+# 6. Extract participants from clusters
+
+K-Medoids (PAM) clustering was chosen as the final clustering solution due to its similarity to the meta-clustering solution and its cluster stability.
+
+```{r}
+cluster_assignment <- predict(rez_pam)
+
+mega_df <- mega_df |>
+  mutate(
+    Clusters = factor(
+      cluster_assignment,
+      levels = c(1, 2, 3),
+      labels = c("Cluster 1", "Cluster 2", "Cluster 3")
+    )
+  )
+```
+
+
+# 7. Analysis
+
+## 7.1. Age
+```{r}
+# Effect size: small = .01, medium = .06, large = .14 
+
+aov_age <- aov(Age ~ Clusters, data = mega_df)
+summary(aov_age)
+eta_squared(aov_age)  # effect size
+```
+
+F(2, 1686) = 30.55, p < .001
+Age explains 3% of the variance in cluster membership - small effect size
+
+## 7.2. Depression & Anxiety (PHQ-4)
+
+```{r}
+# Depression
+
+aov_dep_phq <- aov(PHQ4_Depression ~ Clusters, data = mega_df)
+summary(aov_dep_phq)
+eta_squared(aov_dep_phq)  # effect size
+
+
+# Anxiety
+
+aov_anx_phq <- aov(PHQ4_Anxiety ~ Clusters, data = mega_df)
+summary(aov_anx_phq)
+eta_squared(aov_anx_phq)  # effect size
+```
+
+Depression (PHQ-4): F(2, 1127) = 57.05, p < .001
+Depression (PHQ-4) scores explain 9% of the variance in cluster membership - medium effect size
+
+Anxiety (PHQ-4): F(2, 1127) = 79.34, p < .001
+Anxiety (PHQ-4) scores explain 12% of the variance in cluster membership - medium effect size
+
+## 7.3. Gender
+
+```{r}
+# Cramér's V (2x3 table, df =2): small = .07, medium = .21, large = .35
+
+gender_df <- mega_df |> filter(Gender != "Other")
+
+# Chi-square
+chi_gend <- chisq.test(gender_df$Gender, gender_df$Clusters)
+chi_gend
+
+# Effect size (Cramér's V)
+cramers_v(table(gender_df$Gender, gender_df$Clusters))
+
+# Observed frequencies
+chi_gend$observed
+
+# Expected frequencies - check <5
+chi_gend$expected
+
+
+# Row percentages (% of each gender in each cluster)
+prop.table(table(gender_df$Gender, gender_df$Clusters), margin = 1) * 100
+
+# Column percentages (% of each cluster that is each gender)
+prop.table(table(gender_df$Gender, gender_df$Clusters), margin = 2) * 100
+```
+
+χ²(2) = 48.87, p < .001
+Small-medium association - Cramér's V = 0.17
+
+## 7.4. Mental Health Conditions (Diagnosed)
+
+### 7.4.1. Mood
+
+```{r}
+# Remove NAs
+mood_df <- mega_df |> 
+  filter(!is.na(Disorders_Psychiatric_Mood))
+
+# Chi-square
+chi_mood <- chisq.test(mood_df$Disorders_Psychiatric_Mood, mood_df$Clusters)
+chi_mood
+
+# Effect size (Cramér's V)
+cramers_v(table(mood_df$Disorders_Psychiatric_Mood, mood_df$Clusters))
+
+# Observed frequencies
+chi_mood$observed
+
+# Expected frequencies - check <5
+chi_mood$expected
+```
+
+χ²(2) = 35.35, p < .001
+Medium association - Cramér's V = 0.20
+
+### 7.4.2. Anxiety
+
+```{r}
+# Remove NAs
+anxiety_df <- mega_df |> 
+  filter(!is.na(Disorders_Psychiatric_Anxiety))
+
+# Chi-square
+chi_anxiety <- chisq.test(anxiety_df$Disorders_Psychiatric_Anxiety, anxiety_df$Clusters)
+chi_anxiety
+
+# Effect size (Cramér's V)
+cramers_v(table(anxiety_df$Disorders_Psychiatric_Anxiety, anxiety_df$Clusters))
+
+# Observed frequencies
+chi_anxiety$observed
+
+# Expected frequencies - check <5
+chi_anxiety$expected
+```
+
+χ²(2) = 23.77, p < .001
+Small-medium association - Cramér's V = 0.16
+
+### 7.4.3. Eating Disorders
+
+```{r}
+# Remove NAs
+eating_df <- mega_df |> 
+  filter(!is.na(Disorders_Psychiatric_Eating))
+
+# Chi-square
+chi_eating <- chisq.test(eating_df$Disorders_Psychiatric_Eating, eating_df$Clusters)
+chi_eating
+
+# Effect size (Cramér's V)
+cramers_v(table(eating_df$Disorders_Psychiatric_Eating, eating_df$Clusters))
+
+# Observed frequencies
+chi_eating$observed
+
+# Expected frequencies - check <5
+chi_eating$expected
+```
+
+χ²(2) = 10.19, p = .006
+Small association - Cramér's V = 0.10
+However, 1 expected cell was below 5 (Cluster 2, True, 4.83)
+
+```{r}
+fisher.test(table(eating_df$Disorders_Psychiatric_Eating, eating_df$Clusters), 
+            simulate.p.value = TRUE)
+```
+
+Due to small expected cell frequencies, Fisher's exact test was used in place of chi-square. There was a significant association between eating disorder diagnosis and cluster membership (p = .009), though the effect was small (Cramér's V = 0.10). Eating disorders were disproportionately represented in Cluster 3.
+
+### 7.4.4 Autism
+
+```{r}
+# Remove NAs
+autism_df <- mega_df |> 
+  filter(!is.na(Disorders_Psychiatric_Autism))
+
+# Chi-square
+chi_autism <- chisq.test(autism_df$Disorders_Psychiatric_Autism, autism_df$Clusters)
+chi_autism
+
+# Effect size (Cramér's V)
+cramers_v(table(autism_df$Disorders_Psychiatric_Autism, autism_df$Clusters))
+
+# Observed frequencies
+chi_autism$observed
+
+# Expected frequencies - check <5
+chi_autism$expected
+```
+
+χ²(2) = 21.53, p < .001
+Small-medium association - Cramér's V = 0.15
+
+### 7.4.5. ADHD
+
+```{r}
+# Remove NAs
+adhd_df <- mega_df |> 
+  filter(!is.na(Disorders_Psychiatric_ADHD))
+
+# Chi-square
+chi_adhd <- chisq.test(adhd_df$Disorders_Psychiatric_ADHD, adhd_df$Clusters)
+chi_adhd
+
+# Effect size (Cramér's V)
+cramers_v(table(adhd_df$Disorders_Psychiatric_ADHD, adhd_df$Clusters))
+
+# Observed frequencies
+chi_adhd$observed
+
+# Expected frequencies - check for <5
+chi_adhd$expected
+```
+
+χ²(2) = 13.07, p = .001
+Small association - Cramér's V = 0.12
+
+## 7.5. Somatic Health Conditions (Diagnosed)
+
+### 7.5.1. Afferent Sensitivity
+
+```{r}
+# Remove NAs
+as_df <- mega_df |> 
+  filter(!is.na(Disorders_Somatic_AfferentSensitivity))
+
+# Chi-square
+chi_as <- chisq.test(as_df$Disorders_Somatic_AfferentSensitivity, as_df$Clusters)
+chi_as
+
+# Effect size (Cramér's V)
+cramers_v(table(as_df$Disorders_Somatic_AfferentSensitivity, as_df$Clusters))
+
+# Observed frequencies
+chi_as$observed
+
+# Expected frequencies - check for <5
+chi_as$expected
+```
+
+χ²(2) = 19.39, p < .001
+Small-medium association - Cramér's V = 0.15
+
+### 7.5.2. Central Sensitisation
+
+```{r}
+# Remove NAs
+cs_df <- mega_df |> 
+  filter(!is.na(Disorders_Somatic_CentralSensitization))
+
+# Chi-square
+chi_cs <- chisq.test(cs_df$Disorders_Somatic_CentralSensitization, cs_df$Clusters)
+chi_cs
+
+# Effect size (Cramér's V)
+cramers_v(table(cs_df$Disorders_Somatic_CentralSensitization, cs_df$Clusters))
+
+# Observed frequencies
+chi_cs$observed
+
+# Expected frequencies - check for <5
+chi_cs$expected
+```
+
+χ²(2) = 12.92, p = .002
+Small association - Cramér's V = 0.12
+
+### 7.5.3. Autonomic Dysfunction
+
+```{r}
+# Remove NAs
+ad_df <- mega_df |> 
+  filter(!is.na(Disorders_Somatic_AutonomicDysfunction))
+
+# Chi-square
+chi_ad <- chisq.test(ad_df$Disorders_Somatic_AutonomicDysfunction, ad_df$Clusters)
+chi_ad
+
+# Effect size (Cramér's V)
+cramers_v(table(ad_df$Disorders_Somatic_AutonomicDysfunction, ad_df$Clusters))
+
+# Observed frequencies
+chi_ad$observed
+
+# Expected frequencies - check for <5
+chi_ad$expected
+```
+
+χ²(2) = 6.70, p = .035
+Small association - Cramér's V = 0.08
+
+### 7.5.4. Immune-Inflammatory
+
+```{r}
+# Remove NAs
+ii_df <- mega_df |> 
+  filter(!is.na(Disorders_Somatic_ImmuneInflammatory))
+
+# Chi-square
+chi_ii <- chisq.test(ii_df$Disorders_Somatic_ImmuneInflammatory, ii_df$Clusters)
+chi_ii
+
+# Effect size (Cramér's V)
+cramers_v(table(ii_df$Disorders_Somatic_ImmuneInflammatory, ii_df$Clusters))
+
+# Observed frequencies
+chi_ii$observed
+
+# Expected frequencies - check for <5
+chi_ii$expected
+```
+
+χ²(2) = 22.81, p < .001
+Small-medium association - Cramér's V = 0.16
+
+
+# 8. Multinomial Logistic Regression
+
+```{r}
+# Set a reference cluster - what should this be?
+mega_df$Clusters_relev <- relevel(mega_df$Clusters, ref = "Cluster 1")
+
+# Make dummy variable
+mega_df$Male <- rec(mega_df$Gender, rec = "Male = 1; Female = 0; else = NA")
+
+multinom <- multinom(
+  Clusters_relev ~ Age + PHQ4_Depression + PHQ4_Anxiety + Gender + Disorders_Psychiatric_Mood + Disorders_Psychiatric_Anxiety + Disorders_Psychiatric_Eating + Disorders_Psychiatric_Autism + Disorders_Psychiatric_ADHD + Disorders_Somatic_AfferentSensitivity + Disorders_Somatic_CentralSensitization + Disorders_Somatic_AutonomicDysfunction + Disorders_Somatic_ImmuneInflammatory,
+  data = mega_df
+)
+
+summary(multinom)
+
+tidy(multinom, exponentiate = TRUE, conf.int = TRUE)  # odds ratios
+```
+
+For Cluster 2, higher anxiety symptoms significantly increased the odds of membership (OR = 1.26, p = .014), as did the presence of immune-inflammatory somatic disorders (OR = 1.64, p = .027). No other predictors significantly distinguished Cluster 2 from Cluster 1.
+For Cluster 3, younger age was associated with greater odds of membership (OR = 0.97, p < .001). Higher anxiety symptoms also predicted Cluster 3 membership (OR = 1.29, p = .002), and men were less likely than women to belong to this cluster (OR = 0.45, p < .001). Several additional predictors showed marginal associations (ps = .050–.073) but were not significant.
