@@ -458,6 +458,8 @@ mega_df$Gender[mega_df$Gender == "other"] <- "Other"
 mega_df <- mega_df |> 
   filter(Age >= 18)
 
+mega_df <- mega_df |> rename(MINT_UrIn_13 = MINT_Urin_13, MINT_UrIn_14 = MINT_Urin_14, MINT_UrIn_15 = MINT_Urin_15)
+
 # datasets <- append(datasets, list(new_dataset))   ## use to add more data if necessary
 
 cat("\n=== FINAL MERGED DATASET ===\n")
