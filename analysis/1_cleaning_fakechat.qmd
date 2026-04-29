@@ -640,3 +640,58 @@ somatic2
 ```{r}
 write.csv(mega_df, "C:/Users/emmal/OneDrive - University of Sussex/GitHub/Dissertation/ChatExtracts/data/Emma_dissertationdata.csv", row.names = FALSE)
 ```
+
+
+# 9. PHQ4 Alpha Values
+
+```{r}
+library(psych)
+
+phq4_items <- c("PHQ4_Anxiety_1", "PHQ4_Anxiety_2", "PHQ4_Depression_3", "PHQ4_Depression_4")
+
+interoception_phq4 <- read.csv("https://raw.githubusercontent.com/RealityBending/InteroceptionScale/refs/heads/main/study2/data/rawdata_participants.csv") |>
+  select(Participant, any_of(phq4_items)) |>
+  filter(Participant %in% mega_df$Participant)
+
+fakeart_phq4 <- read.csv("https://raw.githubusercontent.com/RealityBending/FakeArt/refs/heads/main/data/rawdata_participants.csv") |>
+  select(Participant, any_of(phq4_items)) |>
+  filter(Participant %in% mega_df$Participant)
+
+fakechat_phq4 <- read.csv("https://raw.githubusercontent.com/RealityBending/FakeChat/refs/heads/main/data/rawdata_participants.csv") |>
+  select(Participant, any_of(phq4_items)) |>
+  filter(Participant %in% mega_df$Participant)
+
+
+phq4_df <- bind_rows(interoception_phq4, fakeart_phq4, fakechat_phq4) |>
+  select(-Participant)
+
+cat("Total N for PHQ-4 reliability:", nrow(phq4_df), "\n")
+cat("Missing values per item:\n")
+print(colSums(is.na(phq4_df)))
+
+
+# PHQ-4 Depression (2 items)
+alpha_dep <- psych::alpha(phq4_df[, c("PHQ4_Depression_3", "PHQ4_Depression_4")])
+cat("PHQ-4 Depression alpha:", round(alpha_dep$total$raw_alpha, 2), "\n")
+
+# PHQ-4 Anxiety (2 items)
+alpha_anx <- psych::alpha(phq4_df[, c("PHQ4_Anxiety_1", "PHQ4_Anxiety_2")])
+cat("PHQ-4 Anxiety alpha:", round(alpha_anx$total$raw_alpha, 2), "\n")
+
+
+cor(phq4_df[, c("PHQ4_Depression_3", "PHQ4_Depression_4")], 
+    use = "pairwise.complete.obs")[1,2] |> round(2)
+
+cor(phq4_df[, c("PHQ4_Anxiety_1", "PHQ4_Anxiety_2")], 
+    use = "pairwise.complete.obs")[1,2] |> round(2)
+```
+
+
+# 10. MINT Omega Values
+
+```{r}
+omega_mint <- psych::omega(mint_items, nfactors = 11, plot = FALSE)
+cat("Full scale omega_h:", round(omega_mint$omega_h, 2), "\n")
+cat("Full scale omega_t:", round(omega_mint$omega.tot, 2), "\n")
+```
+

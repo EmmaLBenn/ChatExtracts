@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Dissertation - Data Cleaning (Emma)</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="1_cleaning_fakechat_files/libs/clipboard/clipboard.min.js"></script>
+<script src="1_cleaning_fakechat_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="1_cleaning_fakechat_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="1_cleaning_fakechat_files/libs/quarto-html/popper.min.js"></script>
+<script src="1_cleaning_fakechat_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="1_cleaning_fakechat_files/libs/quarto-html/anchor.min.js"></script>
+<link href="1_cleaning_fakechat_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="1_cleaning_fakechat_files/libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="1_cleaning_fakechat_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="1_cleaning_fakechat_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="1_cleaning_fakechat_files/libs/bootstrap/bootstrap-efbb37e9afcc02144ebbc7afd12a776f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#data-loading-harmonisation" id="toc-data-loading-harmonisation" class="nav-link active" data-scroll-target="#data-loading-harmonisation">1. Data Loading &amp; Harmonisation</a></li>
+  <li><a href="#interoceptionscale-study-1" id="toc-interoceptionscale-study-1" class="nav-link" data-scroll-target="#interoceptionscale-study-1">2. InteroceptionScale Study 1</a></li>
+  <li><a href="#interoceptionscale-study-2" id="toc-interoceptionscale-study-2" class="nav-link" data-scroll-target="#interoceptionscale-study-2">3. InteroceptionScale Study 2</a></li>
+  <li><a href="#fakeart-dataset" id="toc-fakeart-dataset" class="nav-link" data-scroll-target="#fakeart-dataset">4. FakeArt Dataset</a></li>
+  <li><a href="#fakechat-dataset" id="toc-fakechat-dataset" class="nav-link" data-scroll-target="#fakechat-dataset">5. FakeChat Dataset</a>
+  <ul class="collapse">
+  <li><a href="#attention-checks" id="toc-attention-checks" class="nav-link" data-scroll-target="#attention-checks">5.1. Attention Checks</a></li>
+  <li><a href="#duration-exclusion" id="toc-duration-exclusion" class="nav-link" data-scroll-target="#duration-exclusion">5.2. Duration Exclusion</a></li>
+  <li><a href="#low-quality-exclusion" id="toc-low-quality-exclusion" class="nav-link" data-scroll-target="#low-quality-exclusion">5.3. Low Quality Exclusion</a></li>
+  <li><a href="#remove-excluded-participants" id="toc-remove-excluded-participants" class="nav-link" data-scroll-target="#remove-excluded-participants">5.4. Remove Excluded Participants</a></li>
+  <li><a href="#compute-questionnaire-scores" id="toc-compute-questionnaire-scores" class="nav-link" data-scroll-target="#compute-questionnaire-scores">5.5. Compute Questionnaire Scores</a></li>
+  <li><a href="#mental-health" id="toc-mental-health" class="nav-link" data-scroll-target="#mental-health">5.6. Mental Health</a></li>
+  <li><a href="#somatic-health" id="toc-somatic-health" class="nav-link" data-scroll-target="#somatic-health">5.7. Somatic Health</a></li>
+  <li><a href="#fakechat-final-sample" id="toc-fakechat-final-sample" class="nav-link" data-scroll-target="#fakechat-final-sample">5.8. FakeChat Final Sample</a></li>
+  </ul></li>
+  <li><a href="#merge-all-datasets" id="toc-merge-all-datasets" class="nav-link" data-scroll-target="#merge-all-datasets">6. Merge All Datasets</a></li>
+  <li><a href="#final-sample" id="toc-final-sample" class="nav-link" data-scroll-target="#final-sample">7. Final Sample</a></li>
+  <li><a href="#save-data" id="toc-save-data" class="nav-link" data-scroll-target="#save-data">8. Save data</a></li>
+  <li><a href="#phq4-alpha-values" id="toc-phq4-alpha-values" class="nav-link" data-scroll-target="#phq4-alpha-values">9. PHQ4 Alpha Values</a></li>
+  <li><a href="#mint-omega-values" id="toc-mint-omega-values" class="nav-link" data-scroll-target="#mint-omega-values">10. MINT Omega Values</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Dissertation - Data Cleaning (Emma)</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load libraries</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(easystats)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<section id="data-loading-harmonisation" class="level1">
+<h1>1. Data Loading &amp; Harmonisation</h1>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- Drop Mint items that were removed in Study 2 final selection ----------</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># These clusters were excluded: UrSe (unstable), StaS (vague), SexO (overlaps SexS),</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># CaNo (overlaps CaCo), and any attention check column.</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>drop_unused_mint <span class="ot">&lt;-</span> <span class="cf">function</span>(df) {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  df <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">!</span><span class="fu">matches</span>(<span class="st">"CaNo|SexO|UrSe|StaS|AttentionCheck"</span>, <span class="at">ignore.case =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- Convert "TRUE"/"FALSE" character columns to 0/1 numeric ---------------</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>convert_logical_cols <span class="ot">&lt;-</span> <span class="cf">function</span>(df) {</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  df <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="fu">across</span>(</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">where</span>(<span class="sc">~</span> <span class="fu">is.character</span>(.x) <span class="sc">&amp;&amp;</span> <span class="fu">all</span>(.x <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"TRUE"</span>, <span class="st">"FALSE"</span>, <span class="cn">NA_character_</span>))),</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="sc">~</span> <span class="fu">as.integer</span>(.x <span class="sc">==</span> <span class="st">"TRUE"</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  ))</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- Align columns between dataframes for merging --------------------------</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Ensures both dataframes have the same columns (fills missing with NA)</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>align_columns <span class="ot">&lt;-</span> <span class="cf">function</span>(df1, df2) {</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  all_vars <span class="ot">&lt;-</span> <span class="fu">union</span>(<span class="fu">names</span>(df1), <span class="fu">names</span>(df2))</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  df1[<span class="fu">setdiff</span>(all_vars, <span class="fu">names</span>(df1))] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  df2[<span class="fu">setdiff</span>(all_vars, <span class="fu">names</span>(df2))] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">df1 =</span> df1, <span class="at">df2 =</span> df2)</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="interoceptionscale-study-1" class="level1">
+<h1>2. InteroceptionScale Study 1</h1>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>interoception1_data <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"https://raw.githubusercontent.com/RealityBending/InteroceptionScale/refs/heads/main/study1/data/data_participants.csv"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Sexual Arousal Sensitivity (SexS)</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_SexS_9 =</span> Sexual_Genital_Q1,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_SexS_7 =</span> Sexual_Genital_Q2,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_SexS_8 =</span> Nociception_Genital_Q1,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Cardiorespiratory Confusion (CaCo)</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_CaCo_11 =</span> Nociception_Respiratory_Q2,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_CaCo_12 =</span> Confusion_Cardiac_Q1,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_CaCo_10 =</span> Confusion_Respiratory_Q1,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Relaxation Awareness (RelA)</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_RelA_5 =</span> Sensitivity_State_Q1,</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_RelA_4 =</span> Sensitivity_State_Q2,</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_RelA_6 =</span> Sensitivity_State_Q3,</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Cardioception (Card)</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Card_28 =</span> Sensitivity_Cardiac_Q1,</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Card_29 =</span> Sensitivity_Cardiac_Q2,</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Card_30 =</span> Sensitivity_Cardiac_Q3,</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Respiroception (Resp)</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Resp_25 =</span> Sensitivity_Respiratory_Q1,</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Resp_26 =</span> Sensitivity_Respiratory_Q3,</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Resp_27 =</span> Sensitivity_Respiratory_Q4,</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Gastroception (Gast)</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Gast_32 =</span> Sensitivity_Gastric_Q1,</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Gast_31 =</span> Sensitivity_Gastric_Q2,</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Gast_33 =</span> Sensitivity_Gastric_Q3,</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Olfactory Compensation (Olfa)</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Olfa_23 =</span> Sensitivity_Gastric_Q4,</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Olfa_24 =</span> Sensitivity_Gastric_Q5,</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Olfa_22 =</span> Sensitivity_SkinThermo_Q5,</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Dermal Hypersensitivity (Derm)</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Derm_16 =</span> Sensitivity_SkinThermo_Q1,</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Derm_18 =</span> Sensitivity_SkinThermo_Q2,</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Derm_17 =</span> Sensitivity_SkinThermo_Q7,</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Expulsion Accuracy (ExAc)</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_ExAc_2 =</span> Accuracy_State_Q2,</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_ExAc_1 =</span> Accuracy_Gastric_Q1,</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_ExAc_3 =</span> Accuracy_Gastric_Q2,</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Satiety Noticing (Sati)</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Sati_21 =</span> Accuracy_Gastric_Q4,</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Sati_19 =</span> Accuracy_Gastric_Q6,</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Sati_20 =</span> Confusion_Gastric_Q2,</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Urointestinal Inaccuracy (Urin)</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Urin_14 =</span> Accuracy_ColonBladder_Q1,</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Urin_13 =</span> Accuracy_ColonBladder_Q5,</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Urin_15 =</span> Confusion_ColonBladder_Q1</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a><span class="co"># Select first 19 columns (demographics/metadata) + all MINT items</span></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>interoception1_df <span class="ot">&lt;-</span> interoception1_data <span class="sc">|&gt;</span></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">19</span>, <span class="fu">contains</span>(<span class="st">"MINT_"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Source =</span> <span class="st">"InteroceptionScale_Study1"</span>)</span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Interoception Study 1 loaded: N ="</span>, <span class="fu">nrow</span>(interoception1_df), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Interoception Study 1 loaded: N = 559 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Study 1 MINT items:"</span>, <span class="fu">sum</span>(<span class="fu">str_detect</span>(<span class="fu">names</span>(interoception1_df), <span class="st">"^MINT_"</span>)), <span class="st">"/ 33</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Study 1 MINT items: 33 / 33</code></pre>
+</div>
+</div>
+<p>Interoception Study 1: 191 participants excluded for failing at least one attention check, and 10 based on measures significantly related to the probability of failing attention checks (namely, the multivariate distance obtained with the OPTICS algorithm, Thériault et al., 2024)</p>
+</section>
+<section id="interoceptionscale-study-2" class="level1">
+<h1>3. InteroceptionScale Study 2</h1>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># N=737. Full 33-item Mint + MAIA, IAS, BPQ, demographics, clinical outcomes.</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>interoception2_df <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"https://raw.githubusercontent.com/RealityBending/InteroceptionScale/refs/heads/main/study2/data/data_participants.csv"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Source =</span> <span class="st">"InteroceptionScale_Study2"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Deficit metacluster</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Urin_13 =</span> MINT_Deficit_Urin_1,</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Urin_14 =</span> MINT_Deficit_Urin_2,</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Urin_15 =</span> MINT_Deficit_Urin_3,</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_CaCo_10 =</span> MINT_Deficit_CaCo_4,</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_CaCo_11 =</span> MINT_Deficit_CaCo_5,</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_CaCo_12 =</span> MINT_Deficit_CaCo_6,</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Olfa_22 =</span> MINT_Deficit_Olfa_10,</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Olfa_23 =</span> MINT_Deficit_Olfa_11,</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Olfa_24 =</span> MINT_Deficit_Olfa_12,</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Sati_19 =</span> MINT_Deficit_Sati_13,</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Sati_20 =</span> MINT_Deficit_Sati_14,</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Sati_21 =</span> MINT_Deficit_Sati_15,</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Awareness metacluster</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_SexS_7 =</span> MINT_Awareness_SexS_19,</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_SexS_9 =</span> MINT_Awareness_SexS_20,</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_SexS_8 =</span> MINT_Awareness_SexS_21,</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_RelA_5 =</span> MINT_Awareness_RelA_28,</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_RelA_4 =</span> MINT_Awareness_RelA_29,</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_RelA_6 =</span> MINT_Awareness_RelA_30,</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_ExAc_3 =</span> MINT_Awareness_ExAc_34,</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_ExAc_1 =</span> MINT_Awareness_ExAc_35,</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_ExAc_2 =</span> MINT_Awareness_ExAc_36,</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Visceroception metacluster</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Card_28 =</span> MINT_Sensitivity_Card_37,</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Card_30 =</span> MINT_Sensitivity_Card_38,</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Card_29 =</span> MINT_Sensitivity_Card_39,</span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Resp_26 =</span> MINT_Sensitivity_Resp_40,</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Resp_27 =</span> MINT_Sensitivity_Resp_41,</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Resp_25 =</span> MINT_Sensitivity_Resp_42,</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Gast_31 =</span> MINT_Sensitivity_Gast_46,</span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Gast_32 =</span> MINT_Sensitivity_Gast_47,</span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Gast_33 =</span> MINT_Sensitivity_Gast_48,</span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Derm_16 =</span> MINT_Sensitivity_Derm_49,</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Derm_17 =</span> MINT_Sensitivity_Derm_50,</span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">MINT_Derm_18 =</span> MINT_Sensitivity_Derm_51</span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>  <span class="fu">convert_logical_cols</span>() <span class="sc">|&gt;</span></span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_unused_mint</span>()  <span class="co"># Remove CaNo, SexO, UrSe, StaS</span></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Interoception Study 2 loaded: N ="</span>, <span class="fu">nrow</span>(interoception2_df), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Interoception Study 2 loaded: N = 737 </code></pre>
+</div>
+</div>
+<p>Interoception Study 2: 118 excluded for failing at least one attention check and 6 based on multivariate distance (using the same procedure as for study 1). 60 excluded due to missing data from a technical issue.</p>
+</section>
+<section id="fakeart-dataset" class="level1">
+<h1>4. FakeArt Dataset</h1>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># N=359. Mint items already use MINT_Facet_N naming (matching Study 2 after renaming).</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>fakeart_df <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"https://raw.githubusercontent.com/RealityBending/FakeArt/refs/heads/main/data/rawdata_participants.csv"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Source =</span> <span class="st">"FakeArt"</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># compute and remove function</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>compute_and_remove <span class="ot">&lt;-</span> <span class="cf">function</span>(fakeart_df, <span class="at">name=</span><span class="st">"BodyAwareness"</span>, <span class="at">pattern=</span>name, <span class="at">method=</span><span class="st">"mean"</span>) {</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  items <span class="ot">&lt;-</span> <span class="fu">select</span>(fakeart_df, <span class="fu">starts_with</span>(pattern), <span class="sc">-</span><span class="fu">contains</span>(<span class="st">"AttentionCheck"</span>))</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  fakeart_df <span class="ot">&lt;-</span> fakeart_df[<span class="sc">!</span><span class="fu">names</span>(fakeart_df) <span class="sc">%in%</span> <span class="fu">names</span>(items)]</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(method <span class="sc">==</span> <span class="st">"mean"</span>) {</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    fakeart_df[[name]] <span class="ot">&lt;-</span> <span class="fu">rowMeans</span>(items, <span class="at">na.rm=</span><span class="cn">TRUE</span>)</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    fakeart_df[[name]] <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(items, <span class="at">na.rm=</span><span class="cn">TRUE</span>)</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  fakeart_df</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="co"># PHQ-4</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>fakeart_df <span class="ot">&lt;-</span> <span class="fu">compute_and_remove</span>(fakeart_df, <span class="at">name=</span><span class="st">"PHQ4_Depression"</span>, <span class="at">method=</span><span class="st">"mean"</span>)</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>fakeart_df <span class="ot">&lt;-</span> <span class="fu">compute_and_remove</span>(fakeart_df, <span class="at">name=</span><span class="st">"PHQ4_Anxiety"</span>, <span class="at">method=</span><span class="st">"mean"</span>)</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="do">## Exclusions </span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>exclude_fakeart <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Attention checks</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>fakeart_checks <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">Participant =</span> fakeart_df<span class="sc">$</span>Participant,</span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">A_MINT =</span> <span class="fu">ifelse</span>(fakeart_df<span class="sc">$</span>MINT_AttentionCheck <span class="sc">==</span> <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>),</span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">A_BAIT =</span> <span class="fu">ifelse</span>(fakeart_df<span class="sc">$</span>BAIT_AttentionCheck <span class="sc">==</span> <span class="dv">6</span>, <span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>fakeart_checks<span class="sc">$</span>fail <span class="ot">&lt;-</span> fakeart_checks<span class="sc">$</span>A_MINT <span class="sc">+</span> fakeart_checks<span class="sc">$</span>A_BAIT</span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>exclude_fakeart<span class="sc">$</span>checks <span class="ot">&lt;-</span> <span class="fu">as.character</span>(fakeart_checks<span class="sc">$</span>Participant[fakeart_checks<span class="sc">$</span>fail <span class="sc">&gt;</span> <span class="dv">0</span>])</span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>fakeart_df <span class="ot">&lt;-</span> fakeart_df <span class="sc">|&gt;</span></span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span>Participant <span class="sc">%in%</span> exclude_fakeart<span class="sc">$</span>checks)</span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(</span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>  <span class="st">"We excluded"</span>, <span class="fu">length</span>(exclude_fakeart<span class="sc">$</span>checks), <span class="st">"participants ("</span>,</span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a>  insight<span class="sc">::</span><span class="fu">format_percent</span>(<span class="fu">length</span>(exclude_fakeart<span class="sc">$</span>checks) <span class="sc">/</span> <span class="fu">nrow</span>(fakeart_df)),</span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a>  <span class="st">") who failed at least one attention check.</span><span class="sc">\n</span><span class="st">"</span></span>
+<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>We excluded 44 participants ( 13.97% ) who failed at least one attention check.</code></pre>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"FakeArt loaded: N ="</span>, <span class="fu">nrow</span>(fakeart_df), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>FakeArt loaded: N = 315 </code></pre>
+</div>
+</div>
+</section>
+<section id="fakechat-dataset" class="level1">
+<h1>5. FakeChat Dataset</h1>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>fakechat_df <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"https://raw.githubusercontent.com/RealityBending/FakeChat/refs/heads/main/data/rawdata_participants.csv"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Source =</span> <span class="st">"FakeChat"</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Store exclusions</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>exclude_fakechat <span class="ot">&lt;-</span> <span class="fu">list</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<section id="attention-checks" class="level2">
+<h2 class="anchored" data-anchor-id="attention-checks">5.1. Attention Checks</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>checks <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">Participant =</span> fakechat_df<span class="sc">$</span>Participant,</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">A_MINT =</span> <span class="fu">ifelse</span>(fakechat_df<span class="sc">$</span>MINT_AttentionCheck <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>), <span class="dv">0</span>, <span class="dv">1</span>),</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">A_BAIT =</span> <span class="fu">ifelse</span>(fakechat_df<span class="sc">$</span>BAIT_AttentionCheck <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">5</span>,<span class="dv">6</span>), <span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co"># count failures</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>checks<span class="sc">$</span>fail <span class="ot">&lt;-</span> checks<span class="sc">$</span>A_MINT <span class="sc">+</span> checks<span class="sc">$</span>A_BAIT</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="co"># exclude anyone failing at least one</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>exclude_fakechat<span class="sc">$</span>checks <span class="ot">&lt;-</span> <span class="fu">as.character</span>(</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>  checks<span class="sc">$</span>Participant[checks<span class="sc">$</span>fail <span class="sc">&gt;</span> <span class="dv">0</span>]</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="co"># exclude anyone failing both attention checks</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="co">#exclude_fakechat$checks &lt;- as.character(</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="co">#  checks$Participant[checks$fail == 2]</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a><span class="co">#)</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>  <span class="st">"We excluded"</span>, <span class="fu">length</span>(exclude_fakechat<span class="sc">$</span>checks), <span class="st">"participants ("</span>,</span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>  insight<span class="sc">::</span><span class="fu">format_percent</span>(<span class="fu">length</span>(exclude_fakechat<span class="sc">$</span>checks) <span class="sc">/</span> <span class="fu">nrow</span>(fakechat_df)),</span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>  <span class="st">") who failed at least one attention check.</span><span class="sc">\n</span><span class="st">"</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>We excluded 58 participants ( 42.34% ) who failed at least one attention check.</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">#cat(</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co">#  "We excluded", length(exclude_fakechat$checks), "participants (",</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co">#  insight::format_percent(length(exclude_fakechat$checks) / nrow(fakechat_df)),</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co">#  ") who failed both of the attention checks.\n"</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co">#)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="duration-exclusion" class="level2">
+<h2 class="anchored" data-anchor-id="duration-exclusion">5.2. Duration Exclusion</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>exclude_fakechat<span class="sc">$</span>duration <span class="ot">&lt;-</span> <span class="fu">as.character</span>(</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  fakechat_df<span class="sc">$</span>Participant[fakechat_df<span class="sc">$</span>Experiment_Duration <span class="sc">&lt;</span> <span class="dv">5</span>]</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>exclude_fakechat<span class="sc">$</span>duration <span class="ot">&lt;-</span> exclude_fakechat<span class="sc">$</span>duration[</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="sc">!</span>exclude_fakechat<span class="sc">$</span>duration <span class="sc">%in%</span> exclude_fakechat<span class="sc">$</span>checks</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"We excluded"</span>, <span class="fu">length</span>(exclude_fakechat<span class="sc">$</span>duration), <span class="st">"participants ("</span>,</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  insight<span class="sc">::</span><span class="fu">format_percent</span>(<span class="fu">length</span>(exclude_fakechat<span class="sc">$</span>duration) <span class="sc">/</span> <span class="fu">nrow</span>(fakechat_df)),</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>  <span class="st">") for having completed the experiment in less than 5 minutes.</span><span class="sc">\n</span><span class="st">"</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>We excluded 0 participants ( 0.00% ) for having completed the experiment in less than 5 minutes.</code></pre>
+</div>
+</div>
+</section>
+<section id="low-quality-exclusion" class="level2">
+<h2 class="anchored" data-anchor-id="low-quality-exclusion">5.3. Low Quality Exclusion</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>exclude_fakechat<span class="sc">$</span>feedback <span class="ot">&lt;-</span> <span class="fu">as.character</span>(</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  fakechat_df<span class="sc">$</span>Participant[fakechat_df<span class="sc">$</span>Feedback_Quality <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>)]</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>exclude_fakechat<span class="sc">$</span>feedback <span class="ot">&lt;-</span> exclude_fakechat<span class="sc">$</span>feedback[</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="sc">!</span>exclude_fakechat<span class="sc">$</span>feedback <span class="sc">%in%</span> <span class="fu">c</span>(exclude_fakechat<span class="sc">$</span>checks, exclude_fakechat<span class="sc">$</span>duration)</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"We excluded"</span>, <span class="fu">length</span>(exclude_fakechat<span class="sc">$</span>feedback), <span class="st">"participants ("</span>,</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  insight<span class="sc">::</span><span class="fu">format_percent</span>(<span class="fu">length</span>(exclude_fakechat<span class="sc">$</span>feedback) <span class="sc">/</span> <span class="fu">nrow</span>(fakechat_df)),</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>  <span class="st">") for self-reporting that they did not do the experiment carefully and thoroughly.</span><span class="sc">\n</span><span class="st">"</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>We excluded 0 participants ( 0.00% ) for self-reporting that they did not do the experiment carefully and thoroughly.</code></pre>
+</div>
+</div>
+</section>
+<section id="remove-excluded-participants" class="level2">
+<h2 class="anchored" data-anchor-id="remove-excluded-participants">5.4. Remove Excluded Participants</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>fakechat_df <span class="ot">&lt;-</span> fakechat_df <span class="sc">|&gt;</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span>Participant <span class="sc">%in%</span> <span class="fu">c</span>(exclude_fakechat<span class="sc">$</span>checks, exclude_fakechat<span class="sc">$</span>duration, exclude_fakechat<span class="sc">$</span>feedback))</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Participants after exclusions: N ="</span>, <span class="fu">nrow</span>(fakechat_df), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Participants after exclusions: N = 79 </code></pre>
+</div>
+</div>
+</section>
+<section id="compute-questionnaire-scores" class="level2">
+<h2 class="anchored" data-anchor-id="compute-questionnaire-scores">5.5. Compute Questionnaire Scores</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># compute and remove function</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>compute_and_remove <span class="ot">&lt;-</span> <span class="cf">function</span>(fakechat_df, name, <span class="at">pattern=</span>name, <span class="at">method=</span><span class="st">"mean"</span>) {</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  items <span class="ot">&lt;-</span> <span class="fu">select</span>(fakechat_df, <span class="fu">starts_with</span>(pattern), <span class="sc">-</span><span class="fu">contains</span>(<span class="st">"AttentionCheck"</span>))</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  fakechat_df <span class="ot">&lt;-</span> fakechat_df[<span class="sc">!</span><span class="fu">names</span>(fakechat_df) <span class="sc">%in%</span> <span class="fu">names</span>(items)]</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(method <span class="sc">==</span> <span class="st">"mean"</span>) {</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    fakechat_df[[name]] <span class="ot">&lt;-</span> <span class="fu">rowMeans</span>(items, <span class="at">na.rm=</span><span class="cn">TRUE</span>)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    fakechat_df[[name]] <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(items, <span class="at">na.rm=</span><span class="cn">TRUE</span>)</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>  fakechat_df</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a><span class="co"># PHQ-4</span></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>fakechat_df <span class="ot">&lt;-</span> <span class="fu">compute_and_remove</span>(fakechat_df, <span class="at">name=</span><span class="st">"PHQ4_Depression"</span>, <span class="at">method=</span><span class="st">"mean"</span>)</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>fakechat_df <span class="ot">&lt;-</span> <span class="fu">compute_and_remove</span>(fakechat_df, <span class="at">name=</span><span class="st">"PHQ4_Anxiety"</span>, <span class="at">method=</span><span class="st">"mean"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="mental-health" class="level2">
+<h2 class="anchored" data-anchor-id="mental-health">5.6. Mental Health</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>fakechat_df<span class="sc">$</span>Disorders_Psychiatric_Mood <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Psychiatric, <span class="st">"MDD|GAD|Bipolar"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>fakechat_df<span class="sc">$</span>Disorders_Psychiatric_MoodTreatment <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  fakechat_df<span class="sc">$</span>Disorders_Psychiatric_Mood <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(fakechat_df<span class="sc">$</span>Disorders_PsychiatricTreatment) <span class="sc">&amp;</span> <span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_PsychiatricTreatment, <span class="st">"Mood|Antidepressant|Anxiolytic|Psychotherapy"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>fakechat_df<span class="sc">$</span>Disorders_Psychiatric_Anxiety <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Psychiatric, <span class="st">"Panic|GAD|Social Phobia|Phobia"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>)</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>fakechat_df<span class="sc">$</span>Disorders_Psychiatric_AnxietyTreatment <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  fakechat_df<span class="sc">$</span>Disorders_Psychiatric_Anxiety <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(fakechat_df<span class="sc">$</span>Disorders_PsychiatricTreatment) <span class="sc">&amp;</span> <span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_PsychiatricTreatment, <span class="st">"Anxiolytic|Psychotherapy|Mindfulness"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>)</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>fakechat_df<span class="sc">$</span>Disorders_Psychiatric_Eating <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Psychiatric, <span class="st">"Eating"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>)</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>fakechat_df<span class="sc">$</span>Disorders_Psychiatric_Addiction <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Psychiatric, <span class="st">"Addiction"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>)</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>fakechat_df<span class="sc">$</span>Disorders_Psychiatric_Borderline <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Psychiatric, <span class="st">"BPD"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>)</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>fakechat_df<span class="sc">$</span>Disorders_Psychiatric_Autism <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Psychiatric, <span class="st">"ASD"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>)</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>fakechat_df<span class="sc">$</span>Disorders_Psychiatric_ADHD <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Psychiatric, <span class="st">"ADHD"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>)</span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a><span class="co"># fakechat_df$Disorders_Psychiatric_Other &lt;- ifelse(str_detect(fakechat_df$Disorders_Psychiatric, "MDD|GAD|Bipolar"), TRUE, FALSE)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="somatic-health" class="level2">
+<h2 class="anchored" data-anchor-id="somatic-health">5.7. Somatic Health</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>somatic <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">Hypermobility =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Hypermobility Syndrome"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">Fibromyalgia =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Fibromyalgia"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">ChronicFatigue =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Chronic Fatigue Syndrome"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">ChronicPain =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Chronic Pain Syndrome"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">BackPain =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Back Pain"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">MuscleTension =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Muscle Tension"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">SkinRashes =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Skin Rashes"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">Eczema =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Eczema"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">Psoriasis =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Psoriasis"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>   <span class="co"># Dermatological = ifelse(str_detect(fakechat_df$Disorders_Somatic, "Other Dermatological"), TRUE, FALSE),</span></span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Musculoskeletal = ifelse(str_detect(fakechat_df$Disorders_Somatic, "Other Musculoskeletal"), TRUE, FALSE),</span></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">Sjogrens =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Sjogren"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">ChestPain =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Chest Pain"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">Arrhythmia =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Cardiac Arrhythmia"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">Hypertension =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Hypertension"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">Hypotension =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Hypotension"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">IBS =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"IBS"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">GERD =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"GERD"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">Crohn =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Crohn"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">UlcerativeColitis =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Ulcerative Colitis"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">Celiac =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Celiac Disease"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">Gluten =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Gluten"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">Lactose =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Lactose"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">ShortBreath =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Shortness of Breath"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">Asthma =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Asthma"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">COPD =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"COPD"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">SleepApnea =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Sleep Apnea"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-29"><a href="#cb25-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">Bronchitis =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Chronic Bronchitis"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-30"><a href="#cb25-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">Nausea =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Nausea/Vomiting"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-31"><a href="#cb25-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">Dizziness =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Dizziness/Lightheadedness"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-32"><a href="#cb25-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">Migraine =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Migraine"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-33"><a href="#cb25-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">Neuropathy =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Neuropathy"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-34"><a href="#cb25-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">Epilepsy =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Epilepsy"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-35"><a href="#cb25-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">MS =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Multiple Sclerosis"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-36"><a href="#cb25-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">FrequentUrination =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Frequent Urination"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-37"><a href="#cb25-37" aria-hidden="true" tabindex="-1"></a>  <span class="at">Endometriosis =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Endometriosis"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-38"><a href="#cb25-38" aria-hidden="true" tabindex="-1"></a>  <span class="at">Cystitis =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Interstitial Cystitis"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb25-39"><a href="#cb25-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">PelvicPain =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(fakechat_df<span class="sc">$</span>Disorders_Somatic, <span class="st">"Chronic Pelvic Pain Syndrome"</span>), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>)</span>
+<span id="cb25-40"><a href="#cb25-40" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb25-41"><a href="#cb25-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-42"><a href="#cb25-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-43"><a href="#cb25-43" aria-hidden="true" tabindex="-1"></a><span class="co"># Cluster A: Afferent Sensitivity (neurogenic excitability, interoceptive hypervigilance)</span></span>
+<span id="cb25-44"><a href="#cb25-44" aria-hidden="true" tabindex="-1"></a>fakechat_df<span class="sc">$</span>Disorders_Somatic_AfferentSensitivity_N <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(somatic[, <span class="fu">c</span>(</span>
+<span id="cb25-45"><a href="#cb25-45" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Migraine"</span>, <span class="st">"Neuropathy"</span>, <span class="st">"MuscleTension"</span>, <span class="st">"Dizziness"</span>, </span>
+<span id="cb25-46"><a href="#cb25-46" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Nausea"</span>, <span class="st">"Epilepsy"</span>, <span class="st">"FrequentUrination"</span></span>
+<span id="cb25-47"><a href="#cb25-47" aria-hidden="true" tabindex="-1"></a>)])</span>
+<span id="cb25-48"><a href="#cb25-48" aria-hidden="true" tabindex="-1"></a>fakechat_df<span class="sc">$</span>Disorders_Somatic_AfferentSensitivity <span class="ot">&lt;-</span> fakechat_df<span class="sc">$</span>Disorders_Somatic_AfferentSensitivity_N <span class="sc">&gt;=</span> <span class="dv">1</span></span>
+<span id="cb25-49"><a href="#cb25-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-50"><a href="#cb25-50" aria-hidden="true" tabindex="-1"></a><span class="co"># Cluster B: Central Sensitization (pain and fatigue syndromes)</span></span>
+<span id="cb25-51"><a href="#cb25-51" aria-hidden="true" tabindex="-1"></a>fakechat_df<span class="sc">$</span>Disorders_Somatic_CentralSensitization_N <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(somatic[, <span class="fu">c</span>(</span>
+<span id="cb25-52"><a href="#cb25-52" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Fibromyalgia"</span>, <span class="st">"ChronicPain"</span>, <span class="st">"ChronicFatigue"</span>, <span class="st">"BackPain"</span>, </span>
+<span id="cb25-53"><a href="#cb25-53" aria-hidden="true" tabindex="-1"></a>  <span class="st">"PelvicPain"</span>, <span class="st">"Endometriosis"</span>, <span class="st">"IBS"</span>, <span class="st">"Cystitis"</span></span>
+<span id="cb25-54"><a href="#cb25-54" aria-hidden="true" tabindex="-1"></a>)])</span>
+<span id="cb25-55"><a href="#cb25-55" aria-hidden="true" tabindex="-1"></a>fakechat_df<span class="sc">$</span>Disorders_Somatic_CentralSensitization <span class="ot">&lt;-</span> fakechat_df<span class="sc">$</span>Disorders_Somatic_CentralSensitization_N <span class="sc">&gt;=</span> <span class="dv">1</span></span>
+<span id="cb25-56"><a href="#cb25-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-57"><a href="#cb25-57" aria-hidden="true" tabindex="-1"></a><span class="co"># Cluster C: Autonomic Dysfunction (dysautonomia and cardiorespiratory instability)</span></span>
+<span id="cb25-58"><a href="#cb25-58" aria-hidden="true" tabindex="-1"></a>fakechat_df<span class="sc">$</span>Disorders_Somatic_AutonomicDysfunction_N <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(somatic[, <span class="fu">c</span>(</span>
+<span id="cb25-59"><a href="#cb25-59" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Hypermobility"</span>, <span class="st">"Arrhythmia"</span>, <span class="st">"ChestPain"</span>, <span class="st">"ShortBreath"</span>, </span>
+<span id="cb25-60"><a href="#cb25-60" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Hypotension"</span>, <span class="st">"Hypertension"</span>, <span class="st">"SleepApnea"</span>, <span class="st">"COPD"</span>, <span class="st">"Bronchitis"</span></span>
+<span id="cb25-61"><a href="#cb25-61" aria-hidden="true" tabindex="-1"></a>)])</span>
+<span id="cb25-62"><a href="#cb25-62" aria-hidden="true" tabindex="-1"></a>fakechat_df<span class="sc">$</span>Disorders_Somatic_AutonomicDysfunction <span class="ot">&lt;-</span> fakechat_df<span class="sc">$</span>Disorders_Somatic_AutonomicDysfunction_N <span class="sc">&gt;=</span> <span class="dv">1</span></span>
+<span id="cb25-63"><a href="#cb25-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-64"><a href="#cb25-64" aria-hidden="true" tabindex="-1"></a><span class="co"># Cluster D: Immune-Inflammatory (gut-brain axis, autoimmune and barrier-related conditions)</span></span>
+<span id="cb25-65"><a href="#cb25-65" aria-hidden="true" tabindex="-1"></a>fakechat_df<span class="sc">$</span>Disorders_Somatic_ImmuneInflammatory_N <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(somatic[, <span class="fu">c</span>(</span>
+<span id="cb25-66"><a href="#cb25-66" aria-hidden="true" tabindex="-1"></a>  <span class="st">"SkinRashes"</span>, <span class="st">"Eczema"</span>, <span class="st">"Psoriasis"</span>, <span class="st">"Sjogrens"</span>, <span class="st">"Asthma"</span>, </span>
+<span id="cb25-67"><a href="#cb25-67" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Celiac"</span>, <span class="st">"Gluten"</span>, <span class="st">"Lactose"</span>, <span class="st">"Crohn"</span>, <span class="st">"UlcerativeColitis"</span>, </span>
+<span id="cb25-68"><a href="#cb25-68" aria-hidden="true" tabindex="-1"></a>  <span class="st">"GERD"</span>, <span class="st">"MS"</span></span>
+<span id="cb25-69"><a href="#cb25-69" aria-hidden="true" tabindex="-1"></a>)])</span>
+<span id="cb25-70"><a href="#cb25-70" aria-hidden="true" tabindex="-1"></a>fakechat_df<span class="sc">$</span>Disorders_Somatic_ImmuneInflammatory <span class="ot">&lt;-</span> fakechat_df<span class="sc">$</span>Disorders_Somatic_ImmuneInflammatory_N <span class="sc">&gt;=</span> <span class="dv">1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="fakechat-final-sample" class="level2">
+<h2 class="anchored" data-anchor-id="fakechat-final-sample">5.8. FakeChat Final Sample</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"FakeChat loaded: N ="</span>, <span class="fu">nrow</span>(fakechat_df), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>FakeChat loaded: N = 79 </code></pre>
+</div>
+</div>
+<p>FakeChat: 58 participants excluded for failing at least one attention check.</p>
+</section>
+</section>
+<section id="merge-all-datasets" class="level1">
+<h1>6. Merge All Datasets</h1>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># combine all datasets</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>datasets <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  interoception1_df,</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  interoception2_df,</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>  fakeart_df,</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>  fakechat_df</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>mega_df <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(datasets) <span class="sc">|&gt;</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Participant"</span>, <span class="st">"Gender"</span>, <span class="st">"Age"</span>, <span class="st">"Education"</span>, <span class="st">"Discipline"</span>, <span class="st">"Student"</span>, <span class="st">"Ethnicity"</span>, <span class="st">"Country"</span>, <span class="st">"Source"</span>, <span class="st">"LifeSatisfaction"</span>, <span class="st">"Disorders_Psychiatric"</span>, <span class="st">"Disorders_PsychiatricTreatment"</span>, <span class="st">"Disorders_Somatic"</span>, <span class="st">"PHQ4_Anxiety"</span>, <span class="st">"PHQ4_Depression"</span>, <span class="st">"Disorders_Psychiatric_Mood"</span>, <span class="st">"Disorders_Psychiatric_MoodTreatment"</span>, <span class="st">"Disorders_Psychiatric_Anxiety"</span>, <span class="st">"Disorders_Psychiatric_AnxietyTreatment"</span>, <span class="st">"Disorders_Psychiatric_Eating"</span>, <span class="st">"Disorders_Psychiatric_Addiction"</span>, <span class="st">"Disorders_Psychiatric_Borderline"</span>, <span class="st">"Disorders_Psychiatric_Autism"</span>, <span class="st">"Disorders_Psychiatric_ADHD"</span>, <span class="st">"Disorders_Somatic_AfferentSensitivity"</span>, <span class="st">"Disorders_Somatic_AfferentSensitivity_N"</span>, <span class="st">"Disorders_Somatic_CentralSensitization"</span>, <span class="st">"Disorders_Somatic_CentralSensitization_N"</span>, <span class="st">"Disorders_Somatic_AutonomicDysfunction"</span>, <span class="st">"Disorders_Somatic_AutonomicDysfunction_N"</span>, <span class="st">"Disorders_Somatic_ImmuneInflammatory"</span>, <span class="st">"Disorders_Somatic_ImmuneInflammatory_N"</span>, <span class="fu">starts_with</span>(<span class="st">"MINT_"</span>)</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>mega_df<span class="sc">$</span>Gender[mega_df<span class="sc">$</span>Gender <span class="sc">==</span> <span class="st">"other"</span>] <span class="ot">&lt;-</span> <span class="st">"Other"</span></span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>mega_df <span class="ot">&lt;-</span> mega_df <span class="sc">|&gt;</span> </span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Age <span class="sc">&gt;=</span> <span class="dv">18</span>)</span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>mega_df <span class="ot">&lt;-</span> mega_df <span class="sc">|&gt;</span> <span class="fu">rename</span>(<span class="at">MINT_UrIn_13 =</span> MINT_Urin_13, <span class="at">MINT_UrIn_14 =</span> MINT_Urin_14, <span class="at">MINT_UrIn_15 =</span> MINT_Urin_15)</span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a><span class="co"># datasets &lt;- append(datasets, list(new_dataset))   ## use to add more data if necessary</span></span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">=== FINAL MERGED DATASET ===</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+=== FINAL MERGED DATASET ===</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Total N ="</span>, <span class="fu">nrow</span>(mega_df), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Total N = 1689 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Sources:</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Sources:</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">table</span>(mega_df<span class="sc">$</span>Source, <span class="at">useNA =</span> <span class="st">"ifany"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+                  FakeArt                  FakeChat InteroceptionScale_Study1 
+                      315                        79                       559 
+InteroceptionScale_Study2 
+                      736 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify MINT items</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>mint_items <span class="ot">&lt;-</span> <span class="fu">select</span>(mega_df, <span class="fu">starts_with</span>(<span class="st">"MINT_"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>MINT_AttentionCheck)</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">MINT items in merged dataset:"</span>, <span class="fu">length</span>(mint_items), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+MINT items in merged dataset: 33 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Missingness check by dataset</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="co">#mega_df |&gt;</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="co">#  group_by(Source) |&gt;</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="co">#  summarise(</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="co">#    n = n(),</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="co">#    pct_missing_mint = round(mean(is.na(across(all_of(mint_items)))), 3),</span></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a><span class="co">#    .groups = "drop"</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a><span class="co">#  ) |&gt;</span></span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a><span class="co">#  print()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="final-sample" class="level1">
+<h1>7. Final Sample</h1>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">Age and Gender</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">Education</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false" href="">Ethnicity</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-4-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-4" role="tab" aria-controls="tabset-1-4" aria-selected="false" href="">Mental Health Conditions</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-5-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-5" role="tab" aria-controls="tabset-1-5" aria-selected="false" href="">Somatic Health Conditions</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>p_age <span class="ot">&lt;-</span> mega_df <span class="sc">|&gt;</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Age, <span class="at">fill =</span> Gender)) <span class="sc">+</span> </span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">data=</span>mega_df, <span class="fu">aes</span>(<span class="at">x =</span> Age, <span class="at">fill=</span>Gender), <span class="at">binwidth =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(mega_df<span class="sc">$</span>Age), <span class="at">color =</span> <span class="st">"red"</span>, <span class="at">linewidth=</span><span class="fl">1.5</span>, <span class="at">linetype=</span><span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis_d</span>() <span class="sc">+</span></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">expand =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>), <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">20</span>, <span class="fu">max</span>(mega_df<span class="sc">$</span>Age), <span class="at">by =</span> <span class="dv">10</span> )) <span class="sc">+</span></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">expand =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>)) <span class="sc">+</span></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Age"</span>, <span class="at">y =</span> <span class="st">"Number of Participants"</span>, <span class="at">color =</span> <span class="cn">NULL</span>, <span class="at">subtitle =</span> <span class="st">"Distribution of participants' age"</span>) <span class="sc">+</span></span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_modern</span>(<span class="at">axis.title.space =</span> <span class="dv">10</span>) <span class="sc">+</span></span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="fu">rel</span>(<span class="fl">1.2</span>), <span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">hjust =</span> <span class="dv">0</span>),</span>
+<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="fu">rel</span>(<span class="fl">1.2</span>), <span class="at">vjust =</span> <span class="dv">7</span>),</span>
+<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.y =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="fu">rel</span>(<span class="fl">1.1</span>)),</span>
+<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="fu">rel</span>(<span class="fl">1.1</span>)),</span>
+<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.title.x =</span> <span class="fu">element_blank</span>()</span>
+<span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a>p_age</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="1_cleaning_fakechat_files/figure-html/p_demographics_age_gender-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>p_edu <span class="ot">&lt;-</span> mega_df <span class="sc">|&gt;</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Student =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(Student), <span class="cn">FALSE</span>, Student),</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">Education =</span> <span class="fu">fct_relevel</span>(Education, <span class="st">"High school"</span>, <span class="st">"Bachelor"</span>, <span class="st">"Master"</span>, <span class="st">"Doctorate"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Education)) <span class="sc">+</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="fu">aes</span>(<span class="at">fill =</span> Student)) <span class="sc">+</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">expand =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>), <span class="at">breaks=</span> scales<span class="sc">::</span><span class="fu">pretty_breaks</span>()) <span class="sc">+</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Education"</span>, <span class="at">y =</span> <span class="st">"Number of Participants"</span>, <span class="at">subtitle =</span> <span class="st">"Participants per achieved education level"</span>, <span class="at">fill =</span> <span class="st">"Is currently a student"</span>) <span class="sc">+</span></span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_modern</span>(<span class="at">axis.title.space =</span> <span class="dv">15</span>) <span class="sc">+</span></span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="fu">rel</span>(<span class="fl">1.2</span>), <span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">hjust =</span> <span class="dv">0</span>),</span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="fu">rel</span>(<span class="fl">1.2</span>), <span class="at">vjust =</span> <span class="dv">7</span>),</span>
+<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.y =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="fu">rel</span>(<span class="fl">1.1</span>)),</span>
+<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="fu">rel</span>(<span class="fl">0.5</span>), <span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span><span class="dv">1</span>),</span>
+<span id="cb40-14"><a href="#cb40-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.title.x =</span> <span class="fu">element_blank</span>()</span>
+<span id="cb40-15"><a href="#cb40-15" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb40-16"><a href="#cb40-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-17"><a href="#cb40-17" aria-hidden="true" tabindex="-1"></a>p_edu</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="1_cleaning_fakechat_files/figure-html/p_demographics_education-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>p_eth <span class="ot">&lt;-</span> mega_df <span class="sc">|&gt;</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(Ethnicity)) <span class="sc">|&gt;</span> </span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="st">""</span>, <span class="at">fill =</span> Ethnicity)) <span class="sc">+</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>() <span class="sc">+</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_polar</span>(<span class="st">"y"</span>) <span class="sc">+</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.x =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.title.x =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.y =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.title.y =</span> <span class="fu">element_blank</span>()</span>
+<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb41-13"><a href="#cb41-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb41-14"><a href="#cb41-14" aria-hidden="true" tabindex="-1"></a>p_eth</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="1_cleaning_fakechat_files/figure-html/p_demographics_ethnicity-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-1-4" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-4-tab">
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">select</span>(mega_df, Participant, Gender, </span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>             Disorders_Psychiatric_Mood, Disorders_Psychiatric_MoodTreatment,</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>             Disorders_Psychiatric_Anxiety, Disorders_Psychiatric_AnxietyTreatment,</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>             Disorders_Psychiatric_Eating, Disorders_Psychiatric_Addiction, Disorders_Psychiatric_Borderline,</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>             Disorders_Psychiatric_Autism, Disorders_Psychiatric_ADHD) <span class="sc">|&gt;</span> </span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">starts_with</span>(<span class="st">"Disorders_"</span>), <span class="at">names_to =</span> <span class="st">"Disorder"</span>, <span class="at">values_to =</span> <span class="st">"Value"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Disorder =</span> <span class="fu">str_remove_all</span>(Disorder, <span class="fu">fixed</span>(<span class="st">"Disorders_Psychiatric_"</span>)),</span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">Disorder =</span> <span class="fu">str_replace</span>(Disorder, <span class="st">"MoodTreatment"</span>, <span class="st">"Mood Disorder (with treatment)"</span>),</span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">Disorder =</span> <span class="fu">str_replace</span>(Disorder, <span class="st">"AnxietyTreatment"</span>, <span class="st">"Anxiety (with treatment)"</span>),</span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">Disorder =</span> <span class="fu">str_replace</span>(Disorder, <span class="st">"Mood$"</span>, <span class="st">"Mood Disorder"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">N =</span> <span class="fu">sum</span>(Value, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">/</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(Value)), <span class="at">.by=</span><span class="fu">c</span>(<span class="st">"Gender"</span>, <span class="st">"Disorder"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">N_tot =</span> <span class="fu">sum</span>(N), <span class="at">.by=</span><span class="st">"Disorder"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb42-13"><a href="#cb42-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Disorder =</span> <span class="fu">fct_reorder</span>(Disorder, <span class="fu">desc</span>(N_tot)),</span>
+<span id="cb42-14"><a href="#cb42-14" aria-hidden="true" tabindex="-1"></a>         <span class="at">Treatment =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(Disorder,  <span class="st">"Treatment"</span>), <span class="st">"With treatment"</span>, <span class="st">"Without treatment"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb42-15"><a href="#cb42-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Disorder, <span class="at">y =</span> N, <span class="at">fill=</span>Gender)) <span class="sc">+</span></span>
+<span id="cb42-16"><a href="#cb42-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>) <span class="sc">+</span></span>
+<span id="cb42-17"><a href="#cb42-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"Male"</span><span class="ot">=</span> <span class="st">"#64B5F6"</span>, <span class="st">"Female"</span><span class="ot">=</span> <span class="st">"#F06292"</span>, <span class="st">"Other"</span><span class="ot">=</span><span class="st">"orange"</span>, <span class="st">"Missing"</span><span class="ot">=</span><span class="st">"brown"</span>)) <span class="sc">+</span></span>
+<span id="cb42-18"><a href="#cb42-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">expand =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>), <span class="at">labels=</span>scales<span class="sc">::</span>percent) <span class="sc">+</span></span>
+<span id="cb42-19"><a href="#cb42-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Mood Disorders"</span>, <span class="at">y =</span> <span class="st">"Number of Participants"</span>, <span class="at">subtitle =</span> <span class="st">"Participants per self-declared mood disorder"</span>, <span class="at">x=</span><span class="st">"Type"</span>) <span class="sc">+</span></span>
+<span id="cb42-20"><a href="#cb42-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb42-21"><a href="#cb42-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>)) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="1_cleaning_fakechat_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-1-5" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-5-tab">
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>somatic <span class="sc">|&gt;</span> </span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(<span class="sc">~</span><span class="fu">n_distinct</span>(.) <span class="sc">&gt;</span> <span class="dv">1</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>  correlation<span class="sc">::</span><span class="fu">correlation</span>(<span class="at">redundant =</span> <span class="cn">TRUE</span>, <span class="at">p_adjust=</span><span class="st">"none"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>  correlation<span class="sc">::</span><span class="fu">cor_sort</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">label =</span> <span class="fu">ifelse</span>(p <span class="sc">&lt;</span> .<span class="dv">001</span>, <span class="st">"*"</span>, <span class="st">""</span>),</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">label =</span> <span class="fu">ifelse</span>(r <span class="sc">==</span> <span class="dv">1</span>, <span class="st">""</span>, label)) <span class="sc">|&gt;</span> </span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>Parameter1, <span class="at">y=</span>Parameter2, <span class="at">fill=</span>r)) <span class="sc">+</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_tile</span>() <span class="sc">+</span></span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label=</span>label), <span class="at">size=</span><span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient2</span>(<span class="at">low=</span><span class="st">"blue"</span>, <span class="at">high=</span><span class="st">"red"</span>, <span class="at">mid=</span><span class="st">"white"</span>, <span class="at">midpoint=</span><span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Co-occurence Matrix of Somatic Disorders"</span>) <span class="sc">+</span></span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()  <span class="sc">+</span></span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle=</span><span class="dv">45</span>, <span class="at">hjust=</span><span class="dv">1</span>),</span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.title =</span> <span class="fu">element_blank</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="1_cleaning_fakechat_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>somatic2 <span class="ot">&lt;-</span> mega_df <span class="sc">|&gt;</span> </span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">starts_with</span>(<span class="st">"Disorders_Somatic_"</span>), Gender, Participant) <span class="sc">|&gt;</span> </span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">ends_with</span>(<span class="st">"_N"</span>), Gender, Participant) <span class="sc">|&gt;</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="fu">starts_with</span>(<span class="st">"Disorders_Somatic_"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(value)) <span class="sc">|&gt;</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">n =</span> <span class="fu">n</span>(), <span class="at">.by=</span><span class="fu">c</span>(<span class="st">"name"</span>, <span class="st">"value"</span>, <span class="st">"Gender"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">name =</span> <span class="fu">str_remove</span>(name, <span class="st">"Disorders_Somatic_"</span>),</span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">name =</span> <span class="fu">str_remove</span>(name, <span class="st">"_N"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">y=</span>n, <span class="at">fill=</span>Gender)) <span class="sc">+</span></span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat=</span><span class="st">"identity"</span>) <span class="sc">+</span></span>
+<span id="cb44-11"><a href="#cb44-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"Male"</span><span class="ot">=</span> <span class="st">"#64B5F6"</span>, <span class="st">"Female"</span><span class="ot">=</span> <span class="st">"#F06292"</span>, <span class="st">"Other"</span><span class="ot">=</span><span class="st">"orange"</span>, <span class="st">"Missing"</span><span class="ot">=</span><span class="st">"brown"</span>)) <span class="sc">+</span></span>
+<span id="cb44-12"><a href="#cb44-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">expand =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>)) <span class="sc">+</span></span>
+<span id="cb44-13"><a href="#cb44-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Somatic Issues"</span>, <span class="at">y =</span> <span class="st">"Number of Participants"</span>, <span class="at">subtitle =</span> <span class="st">"Participants per somatic issues"</span>, <span class="at">x=</span><span class="st">"Number of Issues"</span>) <span class="sc">+</span></span>
+<span id="cb44-14"><a href="#cb44-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb44-15"><a href="#cb44-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb44-16"><a href="#cb44-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>name)</span>
+<span id="cb44-17"><a href="#cb44-17" aria-hidden="true" tabindex="-1"></a>somatic2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="1_cleaning_fakechat_files/figure-html/unnamed-chunk-19-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="save-data" class="level1">
+<h1>8. Save data</h1>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(mega_df, <span class="st">"C:/Users/emmal/OneDrive - University of Sussex/GitHub/Dissertation/ChatExtracts/data/Emma_dissertationdata.csv"</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="phq4-alpha-values" class="level1">
+<h1>9. PHQ4 Alpha Values</h1>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(psych)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'psych' was built under R version 4.4.3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'psych'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:ggplot2':
+
+    %+%, alpha</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following object is masked from 'package:effectsize':
+
+    phi</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following object is masked from 'package:datawizard':
+
+    rescale</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>phq4_items <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"PHQ4_Anxiety_1"</span>, <span class="st">"PHQ4_Anxiety_2"</span>, <span class="st">"PHQ4_Depression_3"</span>, <span class="st">"PHQ4_Depression_4"</span>)</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>interoception_phq4 <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"https://raw.githubusercontent.com/RealityBending/InteroceptionScale/refs/heads/main/study2/data/rawdata_participants.csv"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Participant, <span class="fu">any_of</span>(phq4_items)) <span class="sc">|&gt;</span></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Participant <span class="sc">%in%</span> mega_df<span class="sc">$</span>Participant)</span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>fakeart_phq4 <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"https://raw.githubusercontent.com/RealityBending/FakeArt/refs/heads/main/data/rawdata_participants.csv"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Participant, <span class="fu">any_of</span>(phq4_items)) <span class="sc">|&gt;</span></span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Participant <span class="sc">%in%</span> mega_df<span class="sc">$</span>Participant)</span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a>fakechat_phq4 <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"https://raw.githubusercontent.com/RealityBending/FakeChat/refs/heads/main/data/rawdata_participants.csv"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb52-12"><a href="#cb52-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Participant, <span class="fu">any_of</span>(phq4_items)) <span class="sc">|&gt;</span></span>
+<span id="cb52-13"><a href="#cb52-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Participant <span class="sc">%in%</span> mega_df<span class="sc">$</span>Participant)</span>
+<span id="cb52-14"><a href="#cb52-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-15"><a href="#cb52-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-16"><a href="#cb52-16" aria-hidden="true" tabindex="-1"></a>phq4_df <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(interoception_phq4, fakeart_phq4, fakechat_phq4) <span class="sc">|&gt;</span></span>
+<span id="cb52-17"><a href="#cb52-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>Participant)</span>
+<span id="cb52-18"><a href="#cb52-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-19"><a href="#cb52-19" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Total N for PHQ-4 reliability:"</span>, <span class="fu">nrow</span>(phq4_df), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Total N for PHQ-4 reliability: 1361 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Missing values per item:</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Missing values per item:</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">colSums</span>(<span class="fu">is.na</span>(phq4_df)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>   PHQ4_Anxiety_1    PHQ4_Anxiety_2 PHQ4_Depression_3 PHQ4_Depression_4 
+                0                 0                 0                 0 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="co"># PHQ-4 Depression (2 items)</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>alpha_dep <span class="ot">&lt;-</span> psych<span class="sc">::</span><span class="fu">alpha</span>(phq4_df[, <span class="fu">c</span>(<span class="st">"PHQ4_Depression_3"</span>, <span class="st">"PHQ4_Depression_4"</span>)])</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"PHQ-4 Depression alpha:"</span>, <span class="fu">round</span>(alpha_dep<span class="sc">$</span>total<span class="sc">$</span>raw_alpha, <span class="dv">2</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>PHQ-4 Depression alpha: 0.85 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="co"># PHQ-4 Anxiety (2 items)</span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>alpha_anx <span class="ot">&lt;-</span> psych<span class="sc">::</span><span class="fu">alpha</span>(phq4_df[, <span class="fu">c</span>(<span class="st">"PHQ4_Anxiety_1"</span>, <span class="st">"PHQ4_Anxiety_2"</span>)])</span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"PHQ-4 Anxiety alpha:"</span>, <span class="fu">round</span>(alpha_anx<span class="sc">$</span>total<span class="sc">$</span>raw_alpha, <span class="dv">2</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>PHQ-4 Anxiety alpha: 0.9 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(phq4_df[, <span class="fu">c</span>(<span class="st">"PHQ4_Depression_3"</span>, <span class="st">"PHQ4_Depression_4"</span>)], </span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">use =</span> <span class="st">"pairwise.complete.obs"</span>)[<span class="dv">1</span>,<span class="dv">2</span>] <span class="sc">|&gt;</span> <span class="fu">round</span>(<span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.74</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(phq4_df[, <span class="fu">c</span>(<span class="st">"PHQ4_Anxiety_1"</span>, <span class="st">"PHQ4_Anxiety_2"</span>)], </span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">use =</span> <span class="st">"pairwise.complete.obs"</span>)[<span class="dv">1</span>,<span class="dv">2</span>] <span class="sc">|&gt;</span> <span class="fu">round</span>(<span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.82</code></pre>
+</div>
+</div>
+</section>
+<section id="mint-omega-values" class="level1">
+<h1>10. MINT Omega Values</h1>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>omega_mint <span class="ot">&lt;-</span> psych<span class="sc">::</span><span class="fu">omega</span>(mint_items, <span class="at">nfactors =</span> <span class="dv">11</span>, <span class="at">plot =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required namespace: GPArotation</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Full scale omega_h:"</span>, <span class="fu">round</span>(omega_mint<span class="sc">$</span>omega_h, <span class="dv">2</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Full scale omega_h: 0.71 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Full scale omega_t:"</span>, <span class="fu">round</span>(omega_mint<span class="sc">$</span>omega.tot, <span class="dv">2</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Full scale omega_t: 0.93 </code></pre>
+</div>
+</div>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -20,20 +20,26 @@ execute:
 #| warning: false
 
 library(sjmisc)
-library(cluster)
-library(factoextra)
-library(mclust)
-library(pvclust)
-library(NbClust)
-library(dbscan)
-library(kernlab)
-library(apcluster)
-library(nnet)
-library(umap)
-library(Rtsne)
-library(EGAnet)
-library(ggdist)
+library(patchwork)
+library(ggside)
 library(effectsize)
+library(EGAnet)
+library(nnet)
+library(DescTools)
+library(broom)
+library(mclust)
+library(officer)
+library(pheatmap)
+library(factoextra)
+library(tidygraph)
+library(ggraph)
+library(scales)
+library(car)
+library(fmsb)
+library(ggpubr)
+library(ggdist)
+library(ggtext)
+library(flextable)
 library(tidyverse)
 library(easystats)
 
@@ -58,7 +64,7 @@ mega_df <- mega_df |>
     MINT_RelA  = rowMeans(across(starts_with("MINT_RelA_")),  na.rm = TRUE),
     # Deficit metacluster
     MINT_CaCo  = rowMeans(across(starts_with("MINT_CaCo_")),  na.rm = TRUE),
-    MINT_Urin  = rowMeans(across(starts_with("MINT_Urin_")),  na.rm = TRUE),
+    MINT_UrIn  = rowMeans(across(starts_with("MINT_UrIn_")),  na.rm = TRUE),
     MINT_Derm  = rowMeans(across(starts_with("MINT_Derm_")),  na.rm = TRUE),
     MINT_Sati  = rowMeans(across(starts_with("MINT_Sati_")),  na.rm = TRUE),
     MINT_Olfa  = rowMeans(across(starts_with("MINT_Olfa_")),  na.rm = TRUE),
@@ -72,12 +78,12 @@ mega_df <- mega_df |>
 mega_df <- mega_df |>
   mutate(
     MINT_Awareness = rowMeans(across(c(MINT_SexS, MINT_ExAc, MINT_RelA)), na.rm = TRUE),
-    MINT_Deficit = rowMeans(across(c(MINT_CaCo, MINT_Urin, MINT_Derm, MINT_Sati, MINT_Olfa)), na.rm = TRUE),
+    MINT_Deficit = rowMeans(across(c(MINT_CaCo, MINT_UrIn, MINT_Derm, MINT_Sati, MINT_Olfa)), na.rm = TRUE),
     MINT_Visceroception = rowMeans(across(c(MINT_Card, MINT_Resp, MINT_Gast)), na.rm = TRUE)
   )
 
 mint_lowerorder <- mega_df |> 
-  select(MINT_SexS, MINT_ExAc, MINT_RelA, MINT_CaCo, MINT_Urin, MINT_Derm, MINT_Sati, MINT_Olfa, MINT_Card, MINT_Resp, MINT_Gast)
+  select(MINT_SexS, MINT_ExAc, MINT_RelA, MINT_CaCo, MINT_UrIn, MINT_Derm, MINT_Sati, MINT_Olfa, MINT_Card, MINT_Resp, MINT_Gast)
 
 mint_higherorder <- mega_df |> 
   select(MINT_Awareness, MINT_Deficit, MINT_Visceroception)
@@ -87,100 +93,6 @@ cat("Sources included:", paste(unique(mega_df$Source), collapse = ", "), "\n")
 
 # Structure Validation
 names(mint_items) <- str_remove(names(mint_items), "MINT_")
-```
-
-## 2.1. Item Labels
-
-```{r}
-labels <- list(
-  MINT_ExAc_1 = 
-    "I can always accurately feel when I am about to fart",
-  MINT_ExAc_2 = 
-    "I can always accurately feel when I am about to sneeze",
-  MINT_ExAc_3 = 
-    "I can always accurately feel when I am about to burp",
-  MINT_RelA_4 = 
-    "I always feel in my body if I am relaxed",
-  MINT_RelA_5 = 
-    "I always know when I am relaxed",
-  MINT_RelA_6 =
-    "My body is always in the same specific state when I am relaxed",
-  MINT_SexS_7 =
-    "During sex or masturbation, I often feel very strong sensations coming from my genital areas",
-  MINT_SexS_8 =
-    "My genital organs are very sensitive to pleasant stimulations",
-  MINT_SexS_9 =
-    "When I am sexually aroused, I often notice specific sensations in my genital area (e.g., tingling, warmth, wetness, stiffness, pulsations)",
-  MINT_CaCo_10 =
-    "Sometimes my breathing becomes erratic or shallow and I often don't know why",
-  MINT_CaCo_11 =
-    "I often feel like I can't get enough oxygen by breathing normally",
-  MINT_CaCo_12 =
-    "Sometimes my heart starts racing and I often don't know why",
-  MINT_Urin_13 =
-    "I sometimes feel like I need to urinate or defecate but when I go to the bathroom I produce less than I expected",
-  MINT_Urin_14 =
-    "I often feel the need to urinate even when my bladder is not full",
-  MINT_Urin_15 =
-    "Sometimes I am not sure whether I need to go to the toilet or not (to urinate or defecate)",
-  MINT_Derm_16 = 
-    "In general, my skin is very sensitive",
-  MINT_Derm_17 = 
-    "My skin is susceptible to itchy fabrics and materials",
-  MINT_Derm_18 =
-    "I can notice even very subtle stimulations to my skin (e.g., very light touches)",
-  MINT_Sati_19 =
-    "I don't always feel the need to eat until I am really hungry",
-  MINT_Sati_20 =
-    "Sometimes I don't realise I was hungry until I ate something ",
-  MINT_Sati_21 =
-    "I don't always feel the need to drink until I am really thirsty",
-  MINT_Olfa_22 = 
-    "I often check the smell of my armpits",
-  MINT_Olfa_23 = 
-    "I often check the smell of my own breath",
-  MINT_Olfa_24 = 
-    "I often check the smell of my farts",
-  MINT_Resp_25 = 
-    "In general, I am very sensitive to changes in my breathing",
-  MINT_Resp_26 = 
-    "I can notice even very subtle changes in my breathing",
-  MINT_Resp_27 =
-    "I am always very aware of how I am breathing, even when I am calm",
-  MINT_Card_28 = 
-    "In general, I am very sensitive to changes in my heart rate",
-  MINT_Card_29 = 
-    "I often notice changes in my heart rate",
-  MINT_Card_30 =
-    "I can notice even very subtle changes in the way my heart beats",
-  MINT_Gast_31 =
-    "I can notice even very subtle changes in what my stomach is doing",
-  MINT_Gast_32 = 
-    "In general, I am very sensitive to what my stomach is doing",
-  MINT_Gast_33 =
-    "I am always very aware of what my stomach is doing, even when I am calm"
-)
-```
-
-```{r}
-cleanlabels <- function(x, qname=FALSE) {
-  is_factor <- FALSE
-  if(is.factor(x)) {
-    is_factor <- TRUE
-    vec <- x
-    x <- levels(x)
-  }
-  
-  x <- x |> 
-    str_replace("MINT_", ifelse(qname, "MINT - ", "")) |> 
-    str_replace("_", " - ") 
-  
-  if(is_factor) {
-    levels(vec) <- x
-    return(vec)
-  }
-  x
-}
 ```
 
 
@@ -201,7 +113,7 @@ ega <- bootEGA(
   typicalStructure=TRUE,
   plot.typicalGraph=FALSE,
   iter=500,
-  seed=3, 
+  seed=3,
   ncores = 4)
 
 save(ega, file="models/ega.RData")
@@ -215,29 +127,24 @@ save(ega, file="models/ega.RData")
 load("models/ega.RData")
 
 EGAnet::dimensionStability(ega)
-itemstability <- EGAnet::itemStability(ega, IS.plot=FALSE)
+itemstability <- EGAnet::itemStability(ega, IS.plot = FALSE)
 p_stab <- plot(itemstability)
-p_stab
+
+p_stab <- p_stab +
+  patchwork::plot_annotation(
+    title = "Exploratory Graphical Analysis (EGA)",
+    subtitle = "Bootstrapped replication of clusters (Method = Leiden)",
+    theme = theme(
+      plot.title = element_text(face = "bold", hjust = 0, size = rel(1.4)),
+      plot.subtitle = element_text(hjust = 0, size = rel(1))
+    )
+  )
+
+ggsave("figures/ega_stability.png", p_stab, width = 14, height = 12, dpi = 300)
 
 EGAnet::genTEFI(ega$EGA)
-
-
 ega$EGA
 ```
-
-Lower-order dimensions are very stable. Higher-order dimensions are mostly stable but a few items show ambiguity (Derm 16, 17 & 18, Olfa 22, 23 & 24).
-
-Deficit metacluster is less consistent (0.546) - less robust, possibly due to heterogeneous items
-
-Network characteristics:
-Lower-order network - 33 nodes, 194 edges, edge density 0.367.
-Most edges are small (0.071 ± 0.108), range -0.088 to 0.48 → mostly weak to moderate partial correlations.
-Higher-order network - 11 nodes (representing lower-order communities), 36 edges, edge density 0.655 → more connected than lower-order network.
-Edge weights are slightly stronger on average (0.096 ± 0.103), some negative → stronger inter-community relationships, but some inverse relationships.
-
-Total Entropy Fit Index:
-More negative TEFI = better fit of bifactor/hierarchical model.
-Results suggest a bifactor structure fits better than just correlated lower-order factors.
 
 
 # 4. Clustering
@@ -263,6 +170,23 @@ plot(cluster_estimate)
 Method Agreement Procedure:
 The choice of 3 clusters is supported by 10 (34.48%) methods out of 29 (Hartigan, Scott, trcovw, Tracew, Friedman, Rubin, Ratkowsky, Ball, SDindex, Mixture (VVE)).
 
+```{r}
+# Elbow plot
+p_elbow <- fviz_nbclust(mint_scaled, FUNcluster = cluster::pam, method = "wss", k.max = 8) +
+  labs(title = "Elbow Method — Optimal Number of Clusters") +
+  theme_classic()
+
+# Silhouette plot
+p_sil <- fviz_nbclust(mint_scaled, FUNcluster = cluster::pam, method = "silhouette", k.max = 8) +
+  labs(title = "Silhouette Method — Optimal Number of Clusters") +
+  theme_classic()
+
+p_elbow + p_sil
+
+ggsave("figures/fig_elbow.png", plot = p_elbow, width = 5, height = 6, dpi = 300)
+ggsave("figures/fig_silhouette.png", plot = p_sil, width = 5, height = 6, dpi = 300)
+```
+
 ## 4.2. Kmeans
 
 ```{r}
@@ -274,22 +198,9 @@ rez_kmeans3
 
 plot(rez_kmeans3)
 
-predict(rez_kmeans3) # Get clusters
+predict(rez_kmeans3)
 ```
 
-Cluster 2 (Low across most facets) - Globally low interoception
-Especially low on:
-Cardioception (-0.84)
-Respiroception (-0.82)
-Dermal Hypersensitivity (-0.58)
-
-Cluster 3 - High awareness/relatively low confusion
-High on: Awareness facets (SexS, ExAc, RelA) and Visceroception (Card, Resp, Gast)
-But slightly low on deficit facets (CaCo, Urin)
-
-Cluster 1 (Mixed pattern) - High confusion/dysregulated interoception
-High on Deficit facets (CaCo = +0.94, Urin = +0.71)
-Moderate/high elsewhere
 
 ## 4.3. Hierarchical Clustering
 
@@ -326,22 +237,24 @@ plot(rez_pam) + theme_modern()
 ## 4.6. DBSCAN
 
 ```{r}
-eps <- n_clusters_dbscan(mint_scaled, min_size = 0.1)
-eps
-
-plot(eps) # Find the 'elbow' of the curve: 4.25
+# eps <- n_clusters_dbscan(mint_scaled, min_size = 0.1)
+# eps
+# 
+# plot(eps) # Find the 'elbow' of the curve: 4.25
 ```
 
 ```{r}
-rez_dbscan <- cluster_analysis(mint_scaled, method = "dbscan", dbscan_eps = 4.25)
-
-rez_dbscan
-
-plot(rez_dbscan) + theme_modern()
+# rez_dbscan <- cluster_analysis(mint_scaled, method = "dbscan", dbscan_eps = 4.25)
+# 
+# rez_dbscan
+# 
+# plot(rez_dbscan) + theme_modern()
 ```
 
 Suggests the existence of 1 cluster.
 The 2 clusters accounted for 1.47% of the total variance of the original data.
+
+Removed due to not fitting well with the data.
 
 ## 4.7. K-Medoids with estimation of number of clusters (pamk)
 
@@ -372,19 +285,18 @@ The 4 clusters accounted for 13.43% of the total variance of the original data.
 
 ```{r}
 list_of_results <- list(
-  rez_kmeans3, rez_hclust, rez_hkmeans, rez_pam, rez_pamk, rez_mixture, rez_dbscan
-)
+  rez_kmeans3, rez_hclust, rez_hkmeans, rez_pam, rez_pamk, rez_mixture
+ )
 
 probability_matrix <- cluster_meta(list_of_results)
 
 # Plot the matrix as a reordered heatmap
 heatmap <- stats::heatmap(probability_matrix,
-  scale = "none",
-  col = grDevices::hcl.colors(256, palette = "inferno")
-)
+                          scale = "none",
+                          col = grDevices::hcl.colors(256, palette = "inferno")
+                          )
 heatmap
 ```
-
 
 # 6. Extract participants from clusters
 
@@ -403,6 +315,59 @@ mega_df <- mega_df |>
   )
 ```
 
+## 6.1. Heatmap with K-Medoids Overlay
+
+```{r}
+order_meta <- heatmap$rowInd
+
+clusters_ord <- mega_df$Clusters[order_meta]
+
+cluster_cols <- c(
+  "Cluster 1" = "#6495ed",
+  "Cluster 2" = "#64ca84",
+  "Cluster 3" = "#b96469"
+)
+
+side_cols <- cluster_cols[clusters_ord]
+
+png("figures/overlay_heatmap.png", width = 2800, height = 2000, res = 300)
+
+par(mar = c(2, 2, 10, 2),
+oma = c(0, 0, 0, 8))
+
+overlay_heatmap <- heatmap(
+  probability_matrix[order_meta, order_meta],
+  scale = "none",
+  col = grDevices::hcl.colors(256, "inferno"),
+  ColSideColors = side_cols,
+  labRow = NA,
+  labCol = NA,
+  main = ""
+)
+
+cluster_numeric <- as.numeric(clusters_ord)
+boundaries <- cumsum(table(cluster_numeric))
+abline(h = nrow(probability_matrix) - boundaries, col = "white", lwd = 2)
+abline(v = boundaries, col = "white", lwd = 2)
+
+legend(
+  x = "topright",
+  inset = c(-0.25, 0.05),
+  legend = c(
+    "Interoceptive Baseline (Cluster 1)",
+    "Visceroceptive Awareness (Cluster 2)",
+    "Dysregulated Interoception (Cluster 3)"
+  ),
+  fill = cluster_cols,
+  border = NA,
+  bty = "n",
+  cex = 0.7,
+  xpd = NA
+)
+
+dev.off()
+```
+
 
 # 7. Analysis
 
@@ -413,10 +378,13 @@ mega_df <- mega_df |>
 aov_age <- aov(Age ~ Clusters, data = mega_df)
 summary(aov_age)
 eta_squared(aov_age)  # effect size
+
+# Post-hoc test
+tukey_age <- TukeyHSD(aov_age)
+print(tukey_age)
+
 ```
 
-F(2, 1686) = 30.55, p < .001
-Age explains 3% of the variance in cluster membership - small effect size
 
 ## 7.2. Depression & Anxiety (PHQ-4)
 
@@ -427,19 +395,23 @@ aov_dep_phq <- aov(PHQ4_Depression ~ Clusters, data = mega_df)
 summary(aov_dep_phq)
 eta_squared(aov_dep_phq)  # effect size
 
+# Post-hoc test
+tukey_dep <- TukeyHSD(aov_dep_phq)
+print(tukey_dep)
+
 
 # Anxiety
 
 aov_anx_phq <- aov(PHQ4_Anxiety ~ Clusters, data = mega_df)
 summary(aov_anx_phq)
 eta_squared(aov_anx_phq)  # effect size
+
+# Post-hoc test
+tukey_anx <- TukeyHSD(aov_anx_phq)
+print(tukey_anx)
+
 ```
 
-Depression (PHQ-4): F(2, 1127) = 57.05, p < .001
-Depression (PHQ-4) scores explain 9% of the variance in cluster membership - medium effect size
-
-Anxiety (PHQ-4): F(2, 1127) = 79.34, p < .001
-Anxiety (PHQ-4) scores explain 12% of the variance in cluster membership - medium effect size
 
 ## 7.3. Gender
 
@@ -469,8 +441,6 @@ prop.table(table(gender_df$Gender, gender_df$Clusters), margin = 1) * 100
 prop.table(table(gender_df$Gender, gender_df$Clusters), margin = 2) * 100
 ```
 
-χ²(2) = 48.87, p < .001
-Small-medium association - Cramér's V = 0.17
 
 ## 7.4. Mental Health Conditions (Diagnosed)
 
@@ -495,8 +465,6 @@ chi_mood$observed
 chi_mood$expected
 ```
 
-χ²(2) = 35.35, p < .001
-Medium association - Cramér's V = 0.20
 
 ### 7.4.2. Anxiety
 
@@ -519,8 +487,6 @@ chi_anxiety$observed
 chi_anxiety$expected
 ```
 
-χ²(2) = 23.77, p < .001
-Small-medium association - Cramér's V = 0.16
 
 ### 7.4.3. Eating Disorders
 
@@ -543,16 +509,12 @@ chi_eating$observed
 chi_eating$expected
 ```
 
-χ²(2) = 10.19, p = .006
-Small association - Cramér's V = 0.10
-However, 1 expected cell was below 5 (Cluster 2, True, 4.83)
 
 ```{r}
 fisher.test(table(eating_df$Disorders_Psychiatric_Eating, eating_df$Clusters), 
             simulate.p.value = TRUE)
 ```
 
-Due to small expected cell frequencies, Fisher's exact test was used in place of chi-square. There was a significant association between eating disorder diagnosis and cluster membership (p = .009), though the effect was small (Cramér's V = 0.10). Eating disorders were disproportionately represented in Cluster 3.
 
 ### 7.4.4 Autism
 
@@ -575,8 +537,6 @@ chi_autism$observed
 chi_autism$expected
 ```
 
-χ²(2) = 21.53, p < .001
-Small-medium association - Cramér's V = 0.15
 
 ### 7.4.5. ADHD
 
@@ -599,8 +559,6 @@ chi_adhd$observed
 chi_adhd$expected
 ```
 
-χ²(2) = 13.07, p = .001
-Small association - Cramér's V = 0.12
 
 ## 7.5. Somatic Health Conditions (Diagnosed)
 
@@ -625,8 +583,6 @@ chi_as$observed
 chi_as$expected
 ```
 
-χ²(2) = 19.39, p < .001
-Small-medium association - Cramér's V = 0.15
 
 ### 7.5.2. Central Sensitisation
 
@@ -649,8 +605,6 @@ chi_cs$observed
 chi_cs$expected
 ```
 
-χ²(2) = 12.92, p = .002
-Small association - Cramér's V = 0.12
 
 ### 7.5.3. Autonomic Dysfunction
 
@@ -673,8 +627,6 @@ chi_ad$observed
 chi_ad$expected
 ```
 
-χ²(2) = 6.70, p = .035
-Small association - Cramér's V = 0.08
 
 ### 7.5.4. Immune-Inflammatory
 
@@ -697,28 +649,300 @@ chi_ii$observed
 chi_ii$expected
 ```
 
-χ²(2) = 22.81, p < .001
-Small-medium association - Cramér's V = 0.16
-
 
 # 8. Multinomial Logistic Regression
 
 ```{r}
-# Set a reference cluster - what should this be?
-mega_df$Clusters_relev <- relevel(mega_df$Clusters, ref = "Cluster 1")
+gender_df$Male <- rec(gender_df$Gender, rec = "Male = 1; Female = 0")
 
-# Make dummy variable
-mega_df$Male <- rec(mega_df$Gender, rec = "Male = 1; Female = 0; else = NA")
+gender_df$Clusters_relev <- relevel(gender_df$Clusters, ref = "Cluster 1")
 
-multinom <- multinom(
-  Clusters_relev ~ Age + PHQ4_Depression + PHQ4_Anxiety + Gender + Disorders_Psychiatric_Mood + Disorders_Psychiatric_Anxiety + Disorders_Psychiatric_Eating + Disorders_Psychiatric_Autism + Disorders_Psychiatric_ADHD + Disorders_Somatic_AfferentSensitivity + Disorders_Somatic_CentralSensitization + Disorders_Somatic_AutonomicDysfunction + Disorders_Somatic_ImmuneInflammatory,
-  data = mega_df
+multinom_model <- multinom(
+  Clusters_relev ~ Age + PHQ4_Anxiety + Gender +
+    Disorders_Psychiatric_Mood +
+    Disorders_Somatic_AfferentSensitivity +
+    Disorders_Somatic_ImmuneInflammatory,
+  data = gender_df,
+  model = TRUE
 )
 
-summary(multinom)
+model_data <- multinom_model$model
 
-tidy(multinom, exponentiate = TRUE, conf.int = TRUE)  # odds ratios
+# P-values from Wald z-scores
+z <- summary(multinom_model)$coefficients / summary(multinom_model)$standard.errors
+p_values <- (1 - pnorm(abs(z), 0, 1)) * 2
+round(p_values, 3)
+
+# Odds ratios and CIs
+tidy(multinom_model, exponentiate = TRUE, conf.int = TRUE) |>
+  filter(term != "(Intercept)") |>
+  mutate(
+    OR_CI = paste0(round(estimate, 2), " [", round(conf.low, 2), ", ", round(conf.high, 2), "]"),
+    p_fmt = ifelse(p.value < .001, "< .001", paste0("= ", round(p.value, 3)))
+  ) |>
+  select(y.level, term, OR_CI, p_fmt)
+
+# Likelihood ratio test
+null_model <- multinom(Clusters_relev ~ 1, data = model_data)
+lrt_chi <- null_model$deviance - multinom_model$deviance
+lrt_df  <- multinom_model$edf - null_model$edf
+lrt_p   <- pchisq(lrt_chi, df = lrt_df, lower.tail = FALSE)
+cat("LRT: Chi-square =", round(lrt_chi, 2), ", df =", lrt_df, ", p =", format.pval(lrt_p, eps = .001, digits = 3), "\n")
+
+# Pseudo-R²
+PseudoR2(multinom_model, which = c("CoxSnell", "Nagelkerke", "McFadden"))
+
+# Mean predicted probabilities by actual cluster
+pred_probs <- fitted(multinom_model)
+
+model_data |>
+  mutate(P_C1 = pred_probs[, 1], 
+         P_C2 = pred_probs[, 2], 
+         P_C3 = pred_probs[, 3]) |>
+  group_by(Clusters_relev) |>
+  summarise(across(c(P_C1, P_C2, P_C3), ~ round(mean(., na.rm = TRUE), 3)))
+
+# Check multicollinearity
+lm_check <- lm(
+  as.numeric(Clusters_relev) ~
+    Age + 
+    PHQ4_Anxiety + 
+    Gender +
+    Disorders_Psychiatric_Mood +
+    Disorders_Somatic_AfferentSensitivity +
+    Disorders_Somatic_ImmuneInflammatory,
+  data = model_data
+  )
+
+vif(lm_check)
 ```
 
-For Cluster 2, higher anxiety symptoms significantly increased the odds of membership (OR = 1.26, p = .014), as did the presence of immune-inflammatory somatic disorders (OR = 1.64, p = .027). No other predictors significantly distinguished Cluster 2 from Cluster 1.
-For Cluster 3, younger age was associated with greater odds of membership (OR = 0.97, p < .001). Higher anxiety symptoms also predicted Cluster 3 membership (OR = 1.29, p = .002), and men were less likely than women to belong to this cluster (OR = 0.45, p < .001). Several additional predictors showed marginal associations (ps = .050–.073) but were not significant.
+
+# 9. Figures
+
+## 9.1. Radar chart for cluster profiles
+
+```{r}
+facet_order <- c(
+  "SexS", "ExAc", "RelA",
+  "CaCo", "UrIn", "Derm", "Sati", "Olfa",
+  "Card", "Resp", "Gast"
+)
+
+radar_wide <- mint_lowerorder |>
+  mutate(Cluster = mega_df$Clusters) |>
+  group_by(Cluster) |>
+  summarise(across(everything(), mean, na.rm = TRUE)) |>
+  pivot_longer(-Cluster, names_to = "Facet", values_to = "Value") |>
+  mutate(Facet = gsub("^MINT_", "", Facet)) |>
+  filter(Facet %in% facet_order) |>
+  pivot_wider(names_from = Facet, values_from = Value) |>
+  arrange(Cluster) |>
+  select(Cluster, all_of(facet_order))
+
+plot_data <- bind_rows(
+  setNames(as.data.frame(matrix(rep(6, length(facet_order)), nrow = 1)), facet_order),
+  setNames(as.data.frame(matrix(rep(0, length(facet_order)), nrow = 1)), facet_order),
+  radar_wide |> select(-Cluster)
+)
+
+cluster_labels <- c(
+  "Cluster 1 – Interoceptive Baseline",
+  "Cluster 2 – Visceroceptive Awareness",
+  "Cluster 3 – Dysregulated Interoception"
+)
+
+cluster_cols <- c("#6495ed", "#64ca84", "#b96469")
+
+png("figures/radar_clusters.png", width = 3400, height = 1400, res = 300, bg = "white")
+
+par(mfrow = c(1, 3), mar = c(1, 1, 3, 1), oma = c(1, 0, 3, 0))
+
+for (i in 1:3) {
+  radarchart(
+    plot_data[c(1, 2, i + 2), ],
+    axistype    = 1,
+    seg         = 3,
+    caxislabels = c("0", "2", "4", "6"),
+    pcol        = cluster_cols[i],
+    pfcol       = adjustcolor(cluster_cols[i], alpha.f = 0.15),
+    plwd        = 2.5,
+    cglcol      = "grey80",
+    cglty       = 1,
+    cglwd       = 0.6,
+    vlcex       = 0.85,
+    axislabcol  = "grey50",
+    title       = cluster_labels[i]
+  )
+}
+
+mtext("MINT Facet Profiles by Cluster", outer = TRUE, side = 3, cex = 1.4, font = 2, line = 0.5)
+
+dev.off()
+```
+
+## 9.2. Raincloud plots
+
+```{r}
+cluster_cols <- c(
+  "Cluster 1" = "#6495ed",
+  "Cluster 2" = "#64ca84",
+  "Cluster 3" = "#b96469"
+)
+
+p_dep <- ggplot(mega_df |>
+                  filter(!is.na(PHQ4_Depression)),
+                aes(x = Clusters, y = PHQ4_Depression, fill = Clusters)) +
+  stat_slab(adjust = 0.5, justification = -0.2) +
+  geom_boxplot(width = 0.12, outlier.color = NA, alpha = 0.5) +
+  scale_fill_manual(values = cluster_cols) +
+  labs(title = "A", y = "Depression (PHQ-4)", x = NULL) +
+  coord_flip() +
+  theme_classic(base_size = 12) +
+  theme(legend.position = "none")
+
+p_anx <- ggplot(mega_df |> 
+                  filter(!is.na(PHQ4_Anxiety)),
+                aes(x = Clusters, y = PHQ4_Anxiety, fill = Clusters)) +
+  stat_slab(adjust = 0.5, justification = -0.2) +
+  geom_boxplot(width = 0.12, outlier.color = NA, alpha = 0.5) +
+  scale_fill_manual(values = cluster_cols) +
+  labs(title = "B", y = "Anxiety (PHQ-4)", x = NULL) +
+  coord_flip() +
+  theme_classic(base_size = 12) +
+  theme(legend.position = "none")
+
+p_age <- ggplot(mega_df,
+                aes(x = Clusters, y = Age, fill = Clusters)) +
+  stat_slab(adjust = 0.5, justification = -0.2) +
+  geom_boxplot(width = 0.12, outlier.color = NA, alpha = 0.5) +
+  scale_fill_manual(values = cluster_cols) +
+  labs(title = "C", y = "Age (years)", x = NULL) +
+  coord_flip() +
+  theme_classic(base_size = 12) +
+  theme(legend.position = "none")
+
+combined <- p_dep / p_anx / p_age +
+  plot_annotation(title = "Continuous Variables by Cluster",
+                  theme = theme(plot.title = element_text(face = "bold", hjust = 0.5, size = 14)))
+
+ggsave("figures/rainclouds.png", combined, width = 8, height = 10, dpi = 300)
+```
+
+## 9.3. Heatmap for diagnoses
+
+```{r}
+diag_data <- mega_df |>
+  group_by(Clusters) |>
+  summarise(
+    "Mood Disorder"         = mean(Disorders_Psychiatric_Mood, na.rm = TRUE),
+    "Anxiety Disorder"      = mean(Disorders_Psychiatric_Anxiety, na.rm = TRUE),
+    "Eating Disorder"       = mean(Disorders_Psychiatric_Eating, na.rm = TRUE),
+    "ASD"                   = mean(Disorders_Psychiatric_Autism, na.rm = TRUE),
+    "ADHD"                  = mean(Disorders_Psychiatric_ADHD, na.rm = TRUE),
+    "Afferent Sensitivity"  = mean(Disorders_Somatic_AfferentSensitivity, na.rm = TRUE),
+    "Central Sensitisation" = mean(Disorders_Somatic_CentralSensitization, na.rm = TRUE),
+    "Autonomic Dysfunction" = mean(Disorders_Somatic_AutonomicDysfunction, na.rm = TRUE),
+    "Immune-Inflammatory"   = mean(Disorders_Somatic_ImmuneInflammatory, na.rm = TRUE)
+  ) |>
+  pivot_longer(-Clusters, names_to = "Condition", values_to = "Proportion") |>
+  mutate(
+    Proportion = Proportion * 100,
+    Category = case_when(
+      Condition %in% c("Mood Disorder", "Anxiety Disorder", "Eating Disorder", "ASD", "ADHD") ~ "Psychiatric",
+      TRUE ~ "Somatic"
+    ),
+    Condition = factor(Condition, levels = c(
+      "Mood Disorder", "Anxiety Disorder", "Eating Disorder", "ASD", "ADHD", "Afferent Sensitivity", "Central Sensitisation", "Autonomic Dysfunction", "Immune-Inflammatory"
+    )),
+    Clusters = factor(Clusters,
+      levels = c("Cluster 1", "Cluster 2", "Cluster 3"),
+      labels = c("Cluster 1\nInteroceptive Baseline",
+                 "Cluster 2\nVisceroceptive Awareness",
+                 "Cluster 3\nDysregulated Interoception"))
+  )
+
+ggplot(diag_data, aes(x = Clusters, y = Condition, fill = Proportion)) +
+  geom_tile(colour = "white", linewidth = 0.8) +
+  geom_text(aes(label = sprintf("%.0f%%", Proportion)),
+            size = 3.2, colour = "white", fontface = "bold") +
+  facet_grid(Category ~ ., scales = "free_y", space = "free_y") +
+  scale_fill_gradient(low = "#f7f0f0", high = "#330066",
+                      name = "Prevalence (%)") +
+  labs(title = "Prevalence of Conditions by Cluster",
+       x = NULL, y = NULL) +
+  theme_classic(base_size = 12) +
+  theme(
+    strip.background = element_blank(),
+    strip.text.y     = element_text(face = "bold", angle = 0, hjust = 0),
+    legend.position  = "bottom",
+    axis.text.x      = element_text(face = "bold"),
+    panel.spacing    = unit(0.4, "lines"),
+    plot.title       = element_text(face = "bold", hjust = 0.5)
+  )
+
+ggsave("figures/diagnoses_heatmap.png", width = 8, height = 7, dpi = 300)
+```
+
+## 9.3. Clustering Methods Comparison
+
+```{r}
+method_cols <- c("#4a2377", "#f55f74", "#0d7d87", "#8cc5e3")
+
+p_km <- plot(rez_kmeans3) + 
+  theme_classic(base_size = 10) +
+  scale_colour_manual(values = method_cols) +
+  scale_fill_manual(values = method_cols) +
+  labs(title = "k-Means (k = 3)") +
+  theme(plot.title = element_text(face = "bold", hjust = 0.5),
+        legend.position = "none")
+
+p_hc <- plot(rez_hclust) + 
+  theme_classic(base_size = 10) +
+  scale_colour_manual(values = method_cols) +
+  scale_fill_manual(values = method_cols) +
+  labs(title = "Hierarchical Clustering\n— Ward's Method (k = 3)") +
+  theme(plot.title = element_text(face = "bold", hjust = 0.5),
+        legend.position = "none")
+
+p_hkm <- plot(rez_hkmeans) + 
+  theme_classic(base_size = 10) +
+  scale_colour_manual(values = method_cols) +
+  scale_fill_manual(values = method_cols) +
+  labs(title = "Hierarchical k-Means (k = 3)") +
+  theme(plot.title = element_text(face = "bold", hjust = 0.5),
+        legend.position = "none")
+
+p_pam <- plot(rez_pam) + 
+  theme_classic(base_size = 10) +
+  scale_colour_manual(values = method_cols) +
+  scale_fill_manual(values = method_cols) +
+  labs(title = "k-Medoids PAM (k = 3)") +
+  theme(plot.title = element_text(face = "bold", hjust = 0.5),
+        legend.position = "none")
+
+p_pamk <- plot(rez_pamk) + 
+  theme_classic(base_size = 10) +
+  scale_colour_manual(values = method_cols) +
+  scale_fill_manual(values = method_cols) +
+  labs(title = "K-Medoids with estimation of\nnumber of clusters - pamk (k = 2)") +
+  theme(plot.title = element_text(face = "bold", hjust = 0.5),
+        legend.position = "none")
+
+p_mix <- plot(rez_mixture) + 
+  theme_classic(base_size = 10) +
+  scale_colour_manual(values = method_cols) +
+  scale_fill_manual(values = method_cols) +
+  labs(title = "Gaussian Mixture Modelling (k = 4)") +
+  theme(plot.title = element_text(face = "bold", hjust = 0.5),
+        legend.position = "none")
+
+combined <- (p_km | p_hc | p_hkm) / (p_pam | p_pamk | p_mix) +
+  plot_annotation(
+    title = "Clustering Solutions Across Methods",
+    theme = theme(plot.title = element_text(face = "bold", hjust = 0.5, size = 13))
+  )
+
+ggsave("figures/cluster_comparison.png", combined, width = 14, height = 9, dpi = 300)
+```
+
